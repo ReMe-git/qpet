@@ -43,14 +43,10 @@ target_compile_definitions(Framework PUBLIC CSM_TARGET_LINUX_GL)
 # Link libraries to framework.
 target_link_libraries(Framework Live2DCubismCore Qt6::Core Qt6::Gui Qt6::Widgets Qt6::OpenGLWidgets Qt6::OpenGL)
 
-# Add C++ Requests
-include(FetchContent)
-FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git
-                         GIT_TAG 6ea2dec23c3df14ac3b27b7d2d6bbff0cb7ba1b0) # The commit hash for 1.8.1. Replace with the latest from: https://github.com/libcpr/cpr/releases
-FetchContent_MakeAvailable(cpr)
-
 # Find opengl libraries.
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGLWidgets OpenGL)
+find_package(CURL)
+find_package(jsoncpp)
 
 # Make executable app.
 add_executable(${APP_NAME})
@@ -59,8 +55,10 @@ add_subdirectory(src)
 # Link libraries to app.
 target_link_libraries(${APP_NAME}
   Framework
-  cpr::cpr
+  CURL::libcurl
+  jsoncpp
 )
+
 # Specify include directories.
 target_include_directories(${APP_NAME} PRIVATE ${STB_PATH})
 
