@@ -14,6 +14,8 @@ Live2dWidget::Live2dWidget(QWidget *parent, QMainWindow *mainWindow):
     QOpenGLWidget(parent)
 {
     this->mainWindow = mainWindow;
+    this->last.setX(0);
+    this->last.setY(0);
     this->setAttribute(Qt::WA_AlwaysStackOnTop);
     this->setAttribute(Qt::WA_TranslucentBackground);
 
