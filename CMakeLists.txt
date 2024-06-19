@@ -1,0 +1,74 @@
+cmake_minimum_required(VERSION 3.16)
+
+# Set app name.
+set(APP_NAME vpet)
+# Set directory paths.
+set(SDK_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+set(CORE_PATH ${SDK_ROOT_PATH}/core)
+set(FRAMEWORK_PATH ${SDK_ROOT_PATH}/framework)
+set(STB_PATH ${SDK_ROOT_PATH}/stb)
+set(RES_PATH ${SDK_ROOT_PATH}/res)
+
+# Set project.
+project(${APP_NAME})
+
+# Define output directory.
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin/${APP_NAME})
+# Set configuration (Release and Debug only).
+set(CMAKE_CONFIGURATION_TYPES Debug Release
+  CACHE STRING "Configurations" FORCE
+)
+# Suppress generation of ZERO_CHECK project.
+set(CMAKE_SUPPRESS_REGENERATION ON)
+
+# Specify version of compiler.
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Add Cubism Core.
+# Import as static library.
+add_library(Live2DCubismCore STATIC IMPORTED)
+# Find library path.
+set_target_properties(Live2DCubismCore
+  PROPERTIES
+    IMPORTED_LOCATION ${CORE_PATH}/lib/libLive2DCubismCore.a
+    INTERFACE_INCLUDE_DIRECTORIES ${CORE_PATH}/include
+)
+
+# Add Cubism Native Framework.
+add_subdirectory(${FRAMEWORK_PATH} ${CMAKE_CURRENT_BINARY_DIR}/framework)
+# Add rendering definition to framework.
+target_compile_definitions(Framework PUBLIC CSM_TARGET_LINUX_GL)
+# Link libraries to framework.
+target_link_libraries(Framework Live2DCubismCore Qt6::Core Qt6::Gui Qt6::Widgets Qt6::OpenGLWidgets Qt6::OpenGL)
+
+# Add C++ Requests
+include(FetchContent)
+FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git
+                         GIT_TAG 6ea2dec23c3df14ac3b27b7d2d6bbff0cb7ba1b0) # The commit hash for 1.8.1. Replace with the latest from: https://github.com/libcpr/cpr/releases
+FetchContent_MakeAvailable(cpr)
+
+# Find opengl libraries.
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGLWidgets OpenGL)
+
+# Make executable app.
+add_executable(${APP_NAME})
+# Add source files.
+add_subdirectory(src)
+# Link libraries to app.
+target_link_libraries(${APP_NAME}
+  Framework
+  cpr::cpr
+)
+# Specify include directories.
+target_include_directories(${APP_NAME} PRIVATE ${STB_PATH})
+
+# Copy resource directory to build directory.
+add_custom_command(
+  TARGET ${APP_NAME}
+  POST_BUILD
+  COMMAND
+    ${CMAKE_COMMAND} -E
+      copy_directory ${RES_PATH} $<TARGET_FILE_DIR:${APP_NAME}>/Resources
+)
