@@ -6,16 +6,18 @@
 #include <QtWidgets/QWidget>
 #include <QSystemTrayIcon>
 
-
 #include "live2dwidget/Live2dWidget.hpp"
+#include "ChatWidget.hpp" 
+#include "modelapi/OllamaApi.hpp"
 
 class Application {
 public:
     void SetupApp(void);
 
 private:
-    QMainWindow* mainWindow;
-    QWidget* centralWidget;
-    Live2dWidget* live2dWidget;
-    QSystemTrayIcon* systemTray;
+    QMainWindow *mainWindow;
+    QWidget *centralWidget;
+    Live2dWidget *live2dWidget;
+    ChatWidget *chatWidget;
+    QSystemTrayIcon *systemTray;
 };
