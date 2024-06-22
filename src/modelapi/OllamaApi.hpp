@@ -2,6 +2,7 @@
 
 #include <string>
 #include <mutex>
+#include <condition_variable>
 #include <queue>
 #include <json/json.h>
 
@@ -20,6 +21,7 @@ public:
 private:
     static std::mutex requestLock;
     static std::mutex responeLock;
+    static std::condition_variable hasRequest;
     static std::queue<std::string> requestQueue;
     static std::queue<std::string> responeQueue;
     static std::string c_apiUrl;

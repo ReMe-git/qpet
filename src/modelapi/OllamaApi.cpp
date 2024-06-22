@@ -1,14 +1,17 @@
 #include <mutex>
 #include <queue>
+#include <condition_variable>
 #include <curl/curl.h>
 #include <json/json.h>
 #include <string>
+#include <thread>
 #include "OllamaApi.hpp"
 #include "../live2dwidget/LAppDefine.hpp"
 #include "../live2dwidget/LAppPal.hpp"
 
 using namespace LAppDefine;
 
+std::condition_variable OllamaApi::hasRequest;
 std::mutex OllamaApi::requestLock;
 std::mutex OllamaApi::responeLock;
 std::queue<std::string> OllamaApi::requestQueue;
@@ -22,21 +25,32 @@ Json::Value OllamaApi::c_payload;
 
 bool OllamaApi::GetRespone(std::string &respone)
 {
-    std::lock_guard<std::mutex>lk(responeLock);
+    responeLock.lock();
     if (!responeQueue.empty()) {
         respone = responeQueue.front();
         responeQueue.pop();
+        responeLock.unlock();
         return true;
     } else {
+        responeLock.unlock();
         return false;
     }
 } //GetRespone
 
 void OllamaApi::SendRequest(std::string request)
 {
-    std::lock_guard<std::mutex>lk(requestLock);
-    size_t size = requestQueue.size();
+    requestLock.lock();
     requestQueue.push(request);
+    if (DebugLogEnable) {
+        LAppPal::PrintLogLn("[API] send request");
+    }
+    if (requestQueue.size() > 0) {
+        hasRequest.notify_all();
+        if (DebugLogEnable) {
+            LAppPal::PrintLogLn("[API]notify worker");
+        }
+    }
+    requestLock.unlock();
 } //PullRequest
 
 size_t OllamaApi::OllamaWriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
@@ -53,8 +67,9 @@ size_t OllamaApi::OllamaWriteCallback(void* contents, size_t size, size_t nmemb,
     delete reader;
     std::string appendContent = respone["message"]["content"].asString();
     readBuffer->append(appendContent.c_str(), appendContent.length());
-    std::lock_guard<std::mutex>lk(responeLock);
+    responeLock.lock();
     responeQueue.push(appendContent);
+    responeLock.unlock();
     if (respone["done"].asBool() == true) {
         assistantContent["content"] = c_buffer;
         assistantContent["role"] = "assistant";
@@ -102,11 +117,15 @@ void OllamaApi::CallApi(const std::string question) {
 
         res = curl_easy_perform(curl);
         if (res != CURLE_OK) {
-            LAppPal::PrintLogLn("[API]failed call ollama api, error: %d", res);
+            if (DebugLogEnable) {
+                LAppPal::PrintLogLn("[API]failed call ollama api, error: %d", res);
+            }
         }
         curl_easy_cleanup(curl);
         curl_slist_free_all(headers);
-        LAppPal::PrintLogLn("[API]called ollama api");
+        if (DebugLogEnable) {
+            LAppPal::PrintLogLn("[API]called ollama api");
+        }
     }
 
     curl_global_cleanup();
@@ -125,14 +144,19 @@ void OllamaApi::Run(void)
 {
     std::string requestContent;
     while (true) {
-        std::lock_guard<std::mutex>lk(requestLock);
-        if (!requestQueue.empty()) {
-            requestContent = requestQueue.front();
-            requestQueue.pop();
+        std::unique_lock<std::mutex> rlk(requestLock);
+        while (requestQueue.empty()) {
             if (DebugLogEnable) {
-                LAppPal::PrintLogLn("[API]get request");
+                LAppPal::PrintLogLn("[API]wait request");
             }
-            CallApi(requestContent);
+            hasRequest.wait(rlk);  
         }
+        requestContent = requestQueue.front();
+        requestQueue.pop();
+        requestLock.unlock();
+        if (DebugLogEnable) {
+            LAppPal::PrintLogLn("[API]get request");
+        }
+        CallApi(requestContent);
     }
 }
