@@ -8,7 +8,7 @@
 
 void Application::SetupApp(void)
 {
-    OllamaApi::InitApi("http://localhost:11434/api/chat", "llama3:8b");
+    OllamaApi::InitApi("http://localhost:11434/api/chat", "qwen2:7b");
     mainWindow = new QMainWindow();
     mainWindow->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
     mainWindow->setAttribute(Qt::WA_TranslucentBackground);
