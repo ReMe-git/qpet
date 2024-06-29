@@ -1,109 +1,136 @@
 #include "Live2dWidget.hpp"
-#include "OpenGLExtraFunctions.hpp"
-#include <QApplication>
+
+#include <qbuffer.h>
+
+#include <QTimer>
+
+#include "../modelapi/PiperTTSApi.hpp"
 #include "LAppDefine.hpp"
 #include "LAppDelegate.hpp"
 #include "LAppPal.hpp"
-#include <QTimer>
-#include <qmainwindow.h>
-#include <qnamespace.h>
+#include "OpenGLExtraFunctions.hpp"
 
 using namespace LAppDefine;
 
-Live2dWidget::Live2dWidget(QWidget *parent, QMainWindow *mainWindow):
-    QOpenGLWidget(parent)
-{
-    this->mainWindow = mainWindow;
-    this->last.setX(0);
-    this->last.setY(0);
-    this->setAttribute(Qt::WA_AlwaysStackOnTop);
-    this->setAttribute(Qt::WA_TranslucentBackground);
+float Live2dWidget::ratio;
+QElapsedTimer Live2dWidget::elapsedTimer;
 
-    elapsedTimer.start();
+Live2dWidget::Live2dWidget(QWidget *parent, QMainWindow *mainWindow)
+    : QOpenGLWidget(parent) {
+  this->mainWindow = mainWindow;
+  this->m_lastPos.setX(0);
+  this->m_lastPos.setY(0);
+  this->setAttribute(Qt::WA_AlwaysStackOnTop);
+  this->setAttribute(Qt::WA_TranslucentBackground);
 
-    //Add the render into Timer to make the animation
-    QTimer *timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, this, &Live2dWidget::updateMotions);
-    timer->start(1);
+  elapsedTimer.start();
 
-    // the OpenGL in OpenGLWidget won't scale by HDPI setting, we need to scale manually.
-    ratio = parent->devicePixelRatio();
+  // Add the render into Timer to make the animation
+  QTimer *timer = new QTimer(this);
+  connect(timer, &QTimer::timeout, this, &Live2dWidget::updateMotions);
+  timer->start(1);
+
+  // the OpenGL in OpenGLWidget won't scale by HDPI setting, we need to scale
+  // manually.
+  ratio = parent->devicePixelRatio();
+
+  audioPlayer = new QMediaPlayer(this);
+  audioOutput = new QAudioOutput(this);
+  audioPlayer->setAudioOutput(audioOutput);
 }
-void Live2dWidget::initializeGL()
-{
-    this->makeCurrent();
-    OpenGLExtraFunctions::InitInstance(this->context());
+void Live2dWidget::initializeGL() {
+  this->makeCurrent();
+  OpenGLExtraFunctions::InitInstance(this->context());
 
-    LAppDelegate::GetInstance()->Initialize(this);
-    LAppDelegate::GetInstance()->Run();
+  LAppDelegate::GetInstance()->Initialize(this);
+  LAppDelegate::GetInstance()->Run();
 
-    OpenGLExtraFunctions::GetInstance()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    OpenGLExtraFunctions::GetInstance()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    OpenGLExtraFunctions::GetInstance()->glEnable(GL_BLEND);
-    OpenGLExtraFunctions::GetInstance()->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
+  OpenGLExtraFunctions::GetInstance()->glTexParameteri(
+      GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  OpenGLExtraFunctions::GetInstance()->glTexParameteri(
+      GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  OpenGLExtraFunctions::GetInstance()->glEnable(GL_BLEND);
+  OpenGLExtraFunctions::GetInstance()->glBlendFunc(GL_SRC_ALPHA,
+                                                   GL_ONE_MINUS_SRC_ALPHA);
 }
-void Live2dWidget::resizeGL(int width, int height)
-{
-    LAppDelegate::GetInstance()->Resize(width*ratio,height*ratio);
-}
-
-void Live2dWidget::paintGL()
-{
-    LAppDelegate::GetInstance()->Run();
-}
-
-void Live2dWidget::clear()
-{
-    OpenGLExtraFunctions::GetInstance()->glViewport(0, 0, width()*ratio, height()*ratio);
-    OpenGLExtraFunctions::GetInstance()->glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    OpenGLExtraFunctions::GetInstance()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    OpenGLExtraFunctions::GetInstance()->glClearDepthf(1.0);
+void Live2dWidget::resizeGL(int width, int height) {
+  LAppDelegate::GetInstance()->Resize(width * ratio, height * ratio);
 }
 
+void Live2dWidget::paintGL() { LAppDelegate::GetInstance()->Run(); }
 
-void Live2dWidget::updateMotions()
-{
-    update();
+void Live2dWidget::clear() {
+  OpenGLExtraFunctions::GetInstance()->glViewport(0, 0, width() * ratio,
+                                                  height() * ratio);
+  OpenGLExtraFunctions::GetInstance()->glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+  OpenGLExtraFunctions::GetInstance()->glClear(GL_COLOR_BUFFER_BIT |
+                                               GL_DEPTH_BUFFER_BIT);
+  OpenGLExtraFunctions::GetInstance()->glClearDepthf(1.0);
 }
 
-void Live2dWidget::mousePressEvent(QMouseEvent * event){
-    if (event->button() == Qt::LeftButton && !m_isMove) {
-        m_isMove = true;
-        last = event->globalPosition().toPoint();
-        if (DebugLogEnable) {
-            LAppPal::PrintLogLn("[Qt]mouse press: {x:%.2f, y:%.2f}", 
-                event->globalPosition().x(), event->globalPosition().y());
-        }
+void Live2dWidget::updateMotions() {
+  std::vector<char> wavData;
+  QMediaPlayer::MediaStatus status = audioPlayer->mediaStatus();
+  if (status == QMediaPlayer::NoMedia || status == QMediaPlayer::EndOfMedia) {
+    if (PiperTTSApi::GetRespone(wavData)) {
+      if (DebugLogEnable) {
+        LAppPal::PrintLogLn("[LIVE2D]get wavdata, size is %d", wavData.size());
+      }
+      LAppDelegate::GetInstance()->GetWavFileHandler()->Start(wavData);
+      QByteArray audioData(wavData.data(), wavData.size());
+      QBuffer *audioBuffer = new QBuffer(this);
+      audioBuffer->setData(audioData);
+      audioBuffer->open(QIODevice::ReadOnly);
+      audioPlayer->stop();
+      audioPlayer->setSourceDevice(audioBuffer);
+      audioPlayer->setPlaybackRate(0.96);
+      audioPlayer->play();
     }
-    LAppDelegate::GetInstance()->mousePressEvent(event);
-} //mousePressEvent
+  }
+  update();
+}
 
-void Live2dWidget::mouseMoveEvent(QMouseEvent * event){
-     if (m_isMove) {
-        int dx = event->globalPosition().x() - last.x();
-        int dy = event->globalPosition().y() - last.y();
-        last = event->globalPosition().toPoint();
-        QMainWindow *wp = this->mainWindow;
-        wp->move(wp->x() + dx, wp->y() + dy);
-        if (DebugLogEnable) {
-            LAppPal::PrintLogLn("[Qt]mouse move: {x:%.2f, y:%.2f}", 
-                event->globalPosition().x(), event->globalPosition().y());
-        }
+void Live2dWidget::mousePressEvent(QMouseEvent *event) {
+  if (event->button() == Qt::LeftButton && !m_isPress) {
+    m_isPress = true;
+    m_lastPos = event->globalPosition().toPoint();
+    if (DebugLogEnable) {
+      LAppPal::PrintLogLn("[Qt]mouse press: {x:%.2f, y:%.2f}",
+                          event->globalPosition().x(),
+                          event->globalPosition().y());
     }
-    LAppDelegate::GetInstance()->mouseMoveEvent(event);
-} //mouseMoveEvent
-void Live2dWidget::mouseReleaseEvent(QMouseEvent * event){
-    if (m_isMove) {
-        int dx = event->globalPosition().x() - last.x();
-        int dy = event->globalPosition().y() - last.y();
-        QMainWindow *wp = this->mainWindow;
-        wp->move(wp->x() + dx, wp->y() + dy);
-        m_isMove = false;
-        if (DebugLogEnable) {
-            LAppPal::PrintLogLn("[Qt]mouse release: {x:%.2f, y:%.2f}", 
-                event->globalPosition().x(), event->globalPosition().y());
-        }
+  }
+  LAppDelegate::GetInstance()->mousePressEvent(event);
+}  // mousePressEvent
+
+void Live2dWidget::mouseMoveEvent(QMouseEvent *event) {
+  if (m_isPress) {
+    int dx = event->globalPosition().x() - m_lastPos.x();
+    int dy = event->globalPosition().y() - m_lastPos.y();
+    m_lastPos = event->globalPosition().toPoint();
+    QMainWindow *wp = this->mainWindow;
+    wp->move(wp->x() + dx, wp->y() + dy);
+    if (DebugLogEnable) {
+      LAppPal::PrintLogLn("[Qt]mouse move: {x:%.2f, y:%.2f}",
+                          event->globalPosition().x(),
+                          event->globalPosition().y());
     }
-    LAppDelegate::GetInstance()->mouseReleaseEvent(event);
-} // mouseReleaseEvent
+  }
+  LAppDelegate::GetInstance()->mouseMoveEvent(event);
+}  // mouseMoveEvent
+
+void Live2dWidget::mouseReleaseEvent(QMouseEvent *event) {
+  if (m_isPress) {
+    int dx = event->globalPosition().x() - m_lastPos.x();
+    int dy = event->globalPosition().y() - m_lastPos.y();
+    QMainWindow *wp = this->mainWindow;
+    wp->move(wp->x() + dx, wp->y() + dy);
+    m_isPress = false;
+    if (DebugLogEnable) {
+      LAppPal::PrintLogLn("[Qt]mouse release: {x:%.2f, y:%.2f}",
+                          event->globalPosition().x(),
+                          event->globalPosition().y());
+    }
+  }
+  LAppDelegate::GetInstance()->mouseReleaseEvent(event);
+}  // mouseReleaseEvent

@@ -1,26 +1,27 @@
 #include <QApplication>
 #include <QThread>
-#include <cstdio>
-#include <iostream>
-#include <string>
 
 #include "Application.hpp"
 #include "modelapi/OllamaApi.hpp"
+#include "modelapi/PiperTTSApi.hpp"
 
-class OllamaWorker: public QThread {
-    public:
-    void run(void)
-    {
-        OllamaApi::Run();
-    }
+class OllamaWorker : public QThread {
+ public:
+  void run(void) { OllamaApi::Run(); }
 };
 
-int main(int argc, char *argv[])
-{
-    QApplication app(argc, argv);
-    Application App;
-    OllamaWorker worker;
-    App.SetupApp();
-    worker.start();
-    return app.exec();
+class PiperTTSWorker : public QThread {
+ public:
+  void run(void) { PiperTTSApi::Run(); }
+};
+
+int main(int argc, char *argv[]) {
+  QApplication app(argc, argv);
+  Application App;
+  OllamaWorker ollamaWorker;
+  PiperTTSWorker piperTTSWorker;
+  App.SetupApp();
+  ollamaWorker.start();
+  piperTTSWorker.start();
+  return app.exec();
 }
