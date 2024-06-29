@@ -41,10 +41,11 @@ add_subdirectory(${FRAMEWORK_PATH} ${CMAKE_CURRENT_BINARY_DIR}/framework)
 # Add rendering definition to framework.
 target_compile_definitions(Framework PUBLIC CSM_TARGET_LINUX_GL)
 # Link libraries to framework.
-target_link_libraries(Framework Live2DCubismCore Qt6::Core Qt6::Gui Qt6::Widgets Qt6::OpenGLWidgets Qt6::OpenGL)
+
+target_link_libraries(Framework Live2DCubismCore Qt6::Core Qt6::Gui Qt6::Widgets Qt6::OpenGLWidgets Qt6::OpenGL Qt6::Multimedia)
 
 # Find opengl libraries.
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGLWidgets OpenGL)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGLWidgets OpenGL Multimedia)
 find_package(CURL)
 find_package(jsoncpp)
 
