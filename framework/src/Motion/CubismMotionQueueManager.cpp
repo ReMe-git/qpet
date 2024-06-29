@@ -2,277 +2,258 @@
  * Copyright(c) Live2D Inc. All rights reserved.
  *
  * Use of this source code is governed by the Live2D Open Software license
- * that can be found at https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
+ * that can be found at
+ * https://www.live2d.com/eula/live2d-open-software-license-agreement_en.html.
  */
 
 #include "CubismMotionQueueManager.hpp"
-#include "CubismMotionQueueEntry.hpp"
+
 #include "CubismFramework.hpp"
 #include "CubismMotion.hpp"
+#include "CubismMotionQueueEntry.hpp"
 
-namespace Live2D { namespace Cubism { namespace Framework {
+namespace Live2D {
+namespace Cubism {
+namespace Framework {
 
-const CubismMotionQueueEntryHandle InvalidMotionQueueEntryHandleValue = reinterpret_cast<CubismMotionQueueEntryHandle*>(-1);
+const CubismMotionQueueEntryHandle InvalidMotionQueueEntryHandleValue =
+    reinterpret_cast<CubismMotionQueueEntryHandle *>(-1);
 
 CubismMotionQueueManager::CubismMotionQueueManager()
-    : _userTimeSeconds(0.0f)
-    , _eventCallback(NULL)
-    , _eventCustomData(NULL)
-{}
+    : _userTimeSeconds(0.0f), _eventCallback(NULL), _eventCustomData(NULL) {}
 
-CubismMotionQueueManager::~CubismMotionQueueManager()
-{
-    for (csmUint32 i = 0; i < _motions.GetSize(); ++i)
-    {
-        if (_motions[i])
-        {
-            CSM_DELETE(_motions[i]);
-        }
+CubismMotionQueueManager::~CubismMotionQueueManager() {
+  for (csmUint32 i = 0; i < _motions.GetSize(); ++i) {
+    if (_motions[i]) {
+      CSM_DELETE(_motions[i]);
     }
+  }
 }
 
-CubismMotionQueueEntryHandle CubismMotionQueueManager::StartMotion(ACubismMotion* motion, csmBool autoDelete)
-{
-    if (motion == NULL)
-    {
-        return InvalidMotionQueueEntryHandleValue;
+CubismMotionQueueEntryHandle CubismMotionQueueManager::StartMotion(
+    ACubismMotion *motion, csmBool autoDelete) {
+  if (motion == NULL) {
+    return InvalidMotionQueueEntryHandleValue;
+  }
+
+  CubismMotionQueueEntry *motionQueueEntry = NULL;
+
+  // 既にモーションがあれば終了フラグを立てる
+  for (csmUint32 i = 0; i < _motions.GetSize(); ++i) {
+    motionQueueEntry = _motions.At(i);
+    if (motionQueueEntry == NULL) {
+      continue;
     }
 
-    CubismMotionQueueEntry* motionQueueEntry = NULL;
+    motionQueueEntry->SetFadeout(motionQueueEntry->_motion->GetFadeOutTime());
+  }
 
-    // 既にモーションがあれば終了フラグを立てる
-    for (csmUint32 i = 0; i < _motions.GetSize(); ++i)
-    {
-        motionQueueEntry = _motions.At(i);
-        if (motionQueueEntry == NULL)
-        {
-            continue;
-        }
+  motionQueueEntry = CSM_NEW CubismMotionQueueEntry();  // 終了時に破棄する
+  motionQueueEntry->_autoDelete = autoDelete;
+  motionQueueEntry->_motion = motion;
 
-        motionQueueEntry->SetFadeout(motionQueueEntry->_motion->GetFadeOutTime());
-    }
+  _motions.PushBack(motionQueueEntry, false);
 
-    motionQueueEntry = CSM_NEW CubismMotionQueueEntry(); // 終了時に破棄する
-    motionQueueEntry->_autoDelete = autoDelete;
-    motionQueueEntry->_motion = motion;
-
-    _motions.PushBack(motionQueueEntry, false);
-
-    return motionQueueEntry->_motionQueueEntryHandle;
+  return motionQueueEntry->_motionQueueEntryHandle;
 }
 
-CubismMotionQueueEntryHandle CubismMotionQueueManager::StartMotion(ACubismMotion* motion, csmBool autoDelete, csmFloat32 userTimeSeconds)
-{
+CubismMotionQueueEntryHandle CubismMotionQueueManager::StartMotion(
+    ACubismMotion *motion, csmBool autoDelete, csmFloat32 userTimeSeconds) {
 #if _DEBUG
-    CubismLogWarning("StartMotion(ACubismMotion* motion, csmBool autoDelete, csmFloat32 userTimeSeconds) is a deprecated function. Please use StartMotion(ACubismMotion* motion, csmBool autoDelete).");
+  CubismLogWarning(
+      "StartMotion(ACubismMotion* motion, csmBool autoDelete, csmFloat32 "
+      "userTimeSeconds) is a deprecated function. Please use "
+      "StartMotion(ACubismMotion* motion, csmBool autoDelete).");
 #endif
 
-    if (motion == NULL)
-    {
-        return InvalidMotionQueueEntryHandleValue;
+  if (motion == NULL) {
+    return InvalidMotionQueueEntryHandleValue;
+  }
+
+  CubismMotionQueueEntry *motionQueueEntry = NULL;
+
+  // 既にモーションがあれば終了フラグを立てる
+  for (csmUint32 i = 0; i < _motions.GetSize(); ++i) {
+    motionQueueEntry = _motions.At(i);
+    if (motionQueueEntry == NULL) {
+      continue;
     }
 
-    CubismMotionQueueEntry* motionQueueEntry = NULL;
+    motionQueueEntry->SetFadeout(motionQueueEntry->_motion->GetFadeOutTime());
+  }
 
-    // 既にモーションがあれば終了フラグを立てる
-    for (csmUint32 i = 0; i < _motions.GetSize(); ++i)
-    {
-        motionQueueEntry = _motions.At(i);
-        if (motionQueueEntry == NULL)
-        {
-            continue;
-        }
+  motionQueueEntry = CSM_NEW CubismMotionQueueEntry();  // 終了時に破棄する
+  motionQueueEntry->_autoDelete = autoDelete;
+  motionQueueEntry->_motion = motion;
 
-        motionQueueEntry->SetFadeout(motionQueueEntry->_motion->GetFadeOutTime());
+  _motions.PushBack(motionQueueEntry, false);
+
+  return motionQueueEntry->_motionQueueEntryHandle;
+}
+
+csmBool CubismMotionQueueManager::DoUpdateMotion(CubismModel *model,
+                                                 csmFloat32 userTimeSeconds) {
+  csmBool updated = false;
+
+  // ------- 処理を行う --------
+  // 既にモーションがあれば終了フラグを立てる
+
+  for (csmVector<CubismMotionQueueEntry *>::iterator ite = _motions.Begin();
+       ite != _motions.End();) {
+    CubismMotionQueueEntry *motionQueueEntry = *ite;
+
+    if (motionQueueEntry == NULL) {
+      ite = _motions.Erase(ite);  // 削除
+      continue;
     }
 
-    motionQueueEntry = CSM_NEW CubismMotionQueueEntry(); // 終了時に破棄する
-    motionQueueEntry->_autoDelete = autoDelete;
-    motionQueueEntry->_motion = motion;
+    ACubismMotion *motion = motionQueueEntry->_motion;
 
-    _motions.PushBack(motionQueueEntry, false);
+    if (motion == NULL) {
+      CSM_DELETE(motionQueueEntry);
+      ite = _motions.Erase(ite);  // 削除
 
-    return motionQueueEntry->_motionQueueEntryHandle;
-}
-
-csmBool CubismMotionQueueManager::DoUpdateMotion(CubismModel* model, csmFloat32 userTimeSeconds)
-{
-    csmBool updated = false;
-
-    // ------- 処理を行う --------
-    // 既にモーションがあれば終了フラグを立てる
-
-    for (csmVector<CubismMotionQueueEntry*>::iterator ite = _motions.Begin(); ite != _motions.End();)
-    {
-        CubismMotionQueueEntry* motionQueueEntry = *ite;
-
-        if (motionQueueEntry == NULL)
-        {
-            ite = _motions.Erase(ite);          // 削除
-            continue;
-        }
-
-        ACubismMotion* motion = motionQueueEntry->_motion;
-
-        if (motion == NULL)
-        {
-            CSM_DELETE(motionQueueEntry);
-            ite = _motions.Erase(ite);          // 削除
-
-            continue;
-        }
-
-        // ------ 値を反映する ------
-        motion->UpdateParameters(model, motionQueueEntry, userTimeSeconds);
-        updated = true;
-
-        // ------ ユーザトリガーイベントを検査する ----
-        const csmVector<const csmString*>& firedList = motion->GetFiredEvent(
-            motionQueueEntry->GetLastCheckEventTime() - motionQueueEntry->GetStartTime()
-            , userTimeSeconds - motionQueueEntry->GetStartTime()
-        );
-
-        for (csmUint32 i = 0; i < firedList.GetSize(); ++i)
-        {
-            _eventCallback(this, *(firedList[i]), _eventCustomData);
-        }
-
-        motionQueueEntry->SetLastCheckEventTime(userTimeSeconds);
-
-        // ----- 終了済みの処理があれば削除する ------
-        if (motionQueueEntry->IsFinished())
-        {
-            CSM_DELETE(motionQueueEntry);
-            ite = _motions.Erase(ite);          // 削除
-        }
-        else
-        {
-            if (motionQueueEntry->IsTriggeredFadeOut())
-            {
-                motionQueueEntry->StartFadeout(motionQueueEntry->GetFadeOutSeconds(), userTimeSeconds);
-            }
-
-            ++ite;
-        }
+      continue;
     }
 
-    return updated;
-}
+    // ------ 値を反映する ------
+    motion->UpdateParameters(model, motionQueueEntry, userTimeSeconds);
+    updated = true;
 
-csmVector<CubismMotionQueueEntry*>* CubismMotionQueueManager::GetCubismMotionQueueEntries()
-{
-    return &_motions;
-}
+    // ------ ユーザトリガーイベントを検査する ----
+    const csmVector<const csmString *> &firedList = motion->GetFiredEvent(
+        motionQueueEntry->GetLastCheckEventTime() -
+            motionQueueEntry->GetStartTime(),
+        userTimeSeconds - motionQueueEntry->GetStartTime());
 
-CubismMotionQueueEntry* CubismMotionQueueManager::GetCubismMotionQueueEntry(CubismMotionQueueEntryHandle motionQueueEntryNumber)
-{
-    //------- 処理を行う --------
-    //既にモーションがあれば終了フラグを立てる
-
-    for (csmVector<CubismMotionQueueEntry*>::iterator ite = _motions.Begin(); ite != _motions.End(); ++ite)
-    {
-        CubismMotionQueueEntry* motionQueueEntry = *ite;
-
-        if (motionQueueEntry == NULL)
-        {
-            continue;
-        }
-
-        if (motionQueueEntry->_motionQueueEntryHandle == motionQueueEntryNumber)
-        {
-            return motionQueueEntry;
-        }
+    for (csmUint32 i = 0; i < firedList.GetSize(); ++i) {
+      _eventCallback(this, *(firedList[i]), _eventCustomData);
     }
 
-    return NULL;
+    motionQueueEntry->SetLastCheckEventTime(userTimeSeconds);
+
+    // ----- 終了済みの処理があれば削除する ------
+    if (motionQueueEntry->IsFinished()) {
+      CSM_DELETE(motionQueueEntry);
+      ite = _motions.Erase(ite);  // 削除
+    } else {
+      if (motionQueueEntry->IsTriggeredFadeOut()) {
+        motionQueueEntry->StartFadeout(motionQueueEntry->GetFadeOutSeconds(),
+                                       userTimeSeconds);
+      }
+
+      ++ite;
+    }
+  }
+
+  return updated;
 }
 
-csmBool CubismMotionQueueManager::IsFinished()
-{
-    // ------- 処理を行う --------
-    // 既にモーションがあれば終了フラグを立てる
+csmVector<CubismMotionQueueEntry *> *
+CubismMotionQueueManager::GetCubismMotionQueueEntries() {
+  return &_motions;
+}
 
-    for (csmVector<CubismMotionQueueEntry*>::iterator ite = _motions.Begin(); ite != _motions.End();)
-    {
-        CubismMotionQueueEntry* motionQueueEntry = *ite;
+CubismMotionQueueEntry *CubismMotionQueueManager::GetCubismMotionQueueEntry(
+    CubismMotionQueueEntryHandle motionQueueEntryNumber) {
+  //------- 処理を行う --------
+  // 既にモーションがあれば終了フラグを立てる
 
-        if (motionQueueEntry == NULL)
-        {
-            ite = _motions.Erase(ite);          // 削除
-            continue;
-        }
+  for (csmVector<CubismMotionQueueEntry *>::iterator ite = _motions.Begin();
+       ite != _motions.End(); ++ite) {
+    CubismMotionQueueEntry *motionQueueEntry = *ite;
 
-        ACubismMotion* motion = motionQueueEntry->_motion;
-
-        if (motion == NULL)
-        {
-            CSM_DELETE(motionQueueEntry);
-            ite = _motions.Erase(ite);          // 削除
-            continue;
-        }
-
-        // ----- 終了済みの処理があれば削除する ------
-        if (!motionQueueEntry->IsFinished())
-        {
-            return false;
-        }
-        else
-        {
-            ++ite;
-        }
+    if (motionQueueEntry == NULL) {
+      continue;
     }
 
-    return true;
+    if (motionQueueEntry->_motionQueueEntryHandle == motionQueueEntryNumber) {
+      return motionQueueEntry;
+    }
+  }
+
+  return NULL;
 }
 
-csmBool CubismMotionQueueManager::IsFinished(CubismMotionQueueEntryHandle motionQueueEntryNumber)
-{
-    // 既にモーションがあれば終了フラグを立てる
+csmBool CubismMotionQueueManager::IsFinished() {
+  // ------- 処理を行う --------
+  // 既にモーションがあれば終了フラグを立てる
 
-    for (csmVector<CubismMotionQueueEntry*>::iterator ite = _motions.Begin(); ite != _motions.End(); ite++)
-    {
-        CubismMotionQueueEntry* motionQueueEntry = *ite;
+  for (csmVector<CubismMotionQueueEntry *>::iterator ite = _motions.Begin();
+       ite != _motions.End();) {
+    CubismMotionQueueEntry *motionQueueEntry = *ite;
 
-        if (motionQueueEntry == NULL)
-        {
-            continue;
-        }
-
-        if (motionQueueEntry->_motionQueueEntryHandle == motionQueueEntryNumber && !motionQueueEntry->IsFinished())
-        {
-            return false;
-        }
+    if (motionQueueEntry == NULL) {
+      ite = _motions.Erase(ite);  // 削除
+      continue;
     }
 
-    return true;
-}
+    ACubismMotion *motion = motionQueueEntry->_motion;
 
-void CubismMotionQueueManager::StopAllMotions()
-{
-    // ------- 処理を行う --------
-    // 既にモーションがあれば終了フラグを立てる
-
-    for (csmVector<CubismMotionQueueEntry*>::iterator ite = _motions.Begin(); ite != _motions.End();)
-    {
-        CubismMotionQueueEntry* motionQueueEntry = *ite;
-
-        if (motionQueueEntry == NULL)
-        {
-            ite = _motions.Erase(ite);
-
-            continue;
-        }
-
-        // ----- 終了済みの処理があれば削除する ------
-        CSM_DELETE(motionQueueEntry);
-        ite = _motions.Erase(ite); //削除
+    if (motion == NULL) {
+      CSM_DELETE(motionQueueEntry);
+      ite = _motions.Erase(ite);  // 削除
+      continue;
     }
+
+    // ----- 終了済みの処理があれば削除する ------
+    if (!motionQueueEntry->IsFinished()) {
+      return false;
+    } else {
+      ++ite;
+    }
+  }
+
+  return true;
 }
 
-void CubismMotionQueueManager::SetEventCallback(CubismMotionEventFunction callback, void* customData)
-{
-    _eventCallback   = callback;
-    _eventCustomData = customData;
+csmBool CubismMotionQueueManager::IsFinished(
+    CubismMotionQueueEntryHandle motionQueueEntryNumber) {
+  // 既にモーションがあれば終了フラグを立てる
+
+  for (csmVector<CubismMotionQueueEntry *>::iterator ite = _motions.Begin();
+       ite != _motions.End(); ite++) {
+    CubismMotionQueueEntry *motionQueueEntry = *ite;
+
+    if (motionQueueEntry == NULL) {
+      continue;
+    }
+
+    if (motionQueueEntry->_motionQueueEntryHandle == motionQueueEntryNumber &&
+        !motionQueueEntry->IsFinished()) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
-}}}
+void CubismMotionQueueManager::StopAllMotions() {
+  // ------- 処理を行う --------
+  // 既にモーションがあれば終了フラグを立てる
+
+  for (csmVector<CubismMotionQueueEntry *>::iterator ite = _motions.Begin();
+       ite != _motions.End();) {
+    CubismMotionQueueEntry *motionQueueEntry = *ite;
+
+    if (motionQueueEntry == NULL) {
+      ite = _motions.Erase(ite);
+
+      continue;
+    }
+
+    // ----- 終了済みの処理があれば削除する ------
+    CSM_DELETE(motionQueueEntry);
+    ite = _motions.Erase(ite);  // 削除
+  }
+}
+
+void CubismMotionQueueManager::SetEventCallback(
+    CubismMotionEventFunction callback, void *customData) {
+  _eventCallback = callback;
+  _eventCustomData = customData;
+}
+
+}  // namespace Framework
+}  // namespace Cubism
+}  // namespace Live2D
