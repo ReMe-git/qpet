@@ -41,7 +41,6 @@ class ChatWidget : public QWidget {
   QLineEdit *chatEdit;
   QPushButton *sendButton;
   std::string chatContent;
-  std::string chatBuffer;
   TextParser chatParser;
 
  private slots:
@@ -49,25 +48,18 @@ class ChatWidget : public QWidget {
     std::string data;
     if (OllamaApi::GetRespone(data)) {
       chatContent += data;
-      chatText->setPlainText(QString::fromStdString(chatContent));
-      chatText->moveCursor(QTextCursor::End);
       chatParser.AppendText(data);
       chatParser.SPlitTextByPunctuation();
       TextStruct newText;
       if (chatParser.GetText(newText)) {
+        chatText->setPlainText(QString::fromStdString(chatContent));
+        chatText->moveCursor(QTextCursor::End);
         std::string content;
         newText.GetContent(content);
-        chatBuffer+= content;
-        if (chatBuffer.length() > 15) {
-          PiperTTSApi::SendRequest(chatBuffer);
-          if (DebugLogEnable) {
-            LAppPal::PrintLogLn("[Qt]send chat content %s", chatBuffer.c_str());
-          }
-          chatBuffer.clear();
+        PiperTTSApi::SendRequest(content);
+        if (DebugLogEnable) {
+          LAppPal::PrintLogLn("[Qt]update chat content");
         }
-      }
-      if (DebugLogEnable) {
-        LAppPal::PrintLogLn("[Qt]update chat content");
       }
     }
   }
