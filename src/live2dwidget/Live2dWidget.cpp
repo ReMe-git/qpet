@@ -17,7 +17,6 @@ QElapsedTimer Live2dWidget::elapsedTimer;
 
 Live2dWidget::Live2dWidget(QWidget *parent)
     : QOpenGLWidget(parent) {
-  this->setAttribute(Qt::WA_AlwaysStackOnTop);
   this->setAttribute(Qt::WA_TranslucentBackground);
 
   elapsedTimer.start();
