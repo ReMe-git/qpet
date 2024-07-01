@@ -11,7 +11,7 @@ using namespace TextParserSpace;
 
 class TextStruct {
  public:
-  TextStruct() {}
+  TextStruct() { c_content.clear(); c_type = -1; }
   TextStruct(std::string content, int type) {
     c_content = content;
     c_type = type;
@@ -28,10 +28,12 @@ class TextStruct {
 
 class TextParser {
  public:
-  TextParser();
-  TextParser(std::string content) { c_content = content; }
+  TextParser() { c_content.clear(); offset = 0; };
+  TextParser(std::string content) { c_content = content; offset = 0; }
   void SetText(std::string content) { c_content = content; }
-  void ParseText(void);
+  void AppendText(std::string content) { c_content += content; }
+  void SplitTextByLanguageType(void);
+  void SPlitTextByPunctuation(void);
   bool GetText(TextStruct &ret) {
     if (!textQueue.empty()) {
       ret = textQueue.front();
@@ -43,6 +45,7 @@ class TextParser {
   }
 
  private:
+  int offset;
   std::string c_content;
   std::queue<TextStruct> textQueue;
 };

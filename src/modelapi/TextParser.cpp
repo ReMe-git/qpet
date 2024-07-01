@@ -3,6 +3,7 @@
 #include <codecvt>
 #include <locale>
 #include <string>
+#include <iostream>
 
 // 判断是否是中文字符
 static bool isChinese(wchar_t ch) {
@@ -51,7 +52,7 @@ static bool isNewline(wchar_t ch) {
   return ch == L'\n' || ch == L'\r';  // 换行符 \n 和 \r
 }
 
-void TextParser::ParseText(void) {
+void TextParser::SplitTextByLanguageType(void) {
   std::wstring_convert<std::codecvt_utf8<wchar_t> > converter;
   std::wstring buffer, content;
   int type = -1;
@@ -93,4 +94,27 @@ void TextParser::ParseText(void) {
   TextStruct newText(converter.to_bytes(buffer), type);
   textQueue.push(newText);
   buffer.clear();
-}  // ParseText
+}  // SplitTextByLanguageType
+
+void TextParser::SPlitTextByPunctuation(void) {
+  std::wstring_convert<std::codecvt_utf8<wchar_t> > converter;
+  std::wstring buffer, content; 
+  content = converter.from_bytes(c_content);
+  int i = offset;
+
+  for (; i < content.length(); i++) {
+    wchar_t wc = content.c_str()[i];
+    if (wc == L',' || wc == L'.' || wc == L'?' ||
+     wc == L'。' || wc == L'，' || wc == L'？' || wc == L'\n' || wc == L'\r') {
+      if (buffer.length() > 0) {
+        buffer += wc;
+        TextStruct newText(converter.to_bytes(buffer), -1);
+        textQueue.push(newText);
+      }
+      offset = i;
+      buffer.clear();
+    } else {
+      buffer += wc;
+    }
+  }
+} // SPlitTextByPunctuation

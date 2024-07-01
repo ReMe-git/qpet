@@ -83,7 +83,7 @@ void Live2dWidget::updateMotions() {
       audioBuffer->open(QIODevice::ReadOnly);
       audioPlayer->stop();
       audioPlayer->setSourceDevice(audioBuffer);
-      audioPlayer->setPlaybackRate(0.96);
+      audioPlayer->setPlaybackRate(1.25);
       audioPlayer->play();
     }
   }

@@ -8,11 +8,13 @@
 #include <QTextEdit>
 #include <QTimer>
 #include <QWidget>
+#include <string>
 
 #include "live2dwidget/LAppDefine.hpp"
 #include "live2dwidget/LAppPal.hpp"
 #include "modelapi/OllamaApi.hpp"
 #include "modelapi/PiperTTSApi.hpp"
+#include "modelapi/TextParser.hpp"
 
 using namespace LAppDefine;
 
@@ -39,6 +41,9 @@ class ChatWidget : public QWidget {
   QLineEdit *chatEdit;
   QPushButton *sendButton;
   std::string chatContent;
+  std::string chatBuffer;
+  TextParser chatParser;
+
  private slots:
   void UpdateChatContent(void) {
     std::string data;
@@ -46,6 +51,21 @@ class ChatWidget : public QWidget {
       chatContent += data;
       chatText->setPlainText(QString::fromStdString(chatContent));
       chatText->moveCursor(QTextCursor::End);
+      chatParser.AppendText(data);
+      chatParser.SPlitTextByPunctuation();
+      TextStruct newText;
+      if (chatParser.GetText(newText)) {
+        std::string content;
+        newText.GetContent(content);
+        chatBuffer+= content;
+        if (chatBuffer.length() > 15) {
+          PiperTTSApi::SendRequest(chatBuffer);
+          if (DebugLogEnable) {
+            LAppPal::PrintLogLn("[Qt]send chat content %s", chatBuffer.c_str());
+          }
+          chatBuffer.clear();
+        }
+      }
       if (DebugLogEnable) {
         LAppPal::PrintLogLn("[Qt]update chat content");
       }
@@ -57,7 +77,7 @@ class ChatWidget : public QWidget {
     data = chatEdit->text().toStdString();
     chatEdit->clear();
     if (data.length() > 0) {
-      PiperTTSApi::SendRequest(data);
+      OllamaApi::SendRequest(data);
       if (DebugLogEnable) {
         LAppPal::PrintLogLn("[Qt]send request");
       }

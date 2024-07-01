@@ -131,7 +131,7 @@ void PiperTTSApi::Run(void) {
     }
     TextParser parser(requestContent);
     TextStruct text;
-    parser.ParseText();
+    parser.SplitTextByLanguageType();
     while (parser.GetText(text)) {
       std::string content;
       text.GetContent(content);
