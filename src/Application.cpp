@@ -21,13 +21,13 @@ void Application::SetupApp(void) {
   mainWindow->setWindowFlags(Qt::WindowStaysOnTopHint |
                              Qt::FramelessWindowHint);
   mainWindow->setAttribute(Qt::WA_TranslucentBackground);
-  mainWindow->resize(600, 600);
+  mainWindow->resize(700, 600);
   centralWidget = new QWidget(mainWindow);
   centralWidget->setObjectName(QString::fromUtf8("centralwidget"));
   centralWidget->setGeometry(QRect(400, 0, 200, 600));
-  live2dWidget = new Live2dWidget(centralWidget, mainWindow);
+  live2dWidget = new Live2dWidget(centralWidget);
   live2dWidget->setObjectName(QString::fromUtf8("openGLWidget"));
-  live2dWidget->setGeometry(QRect(400, 0, 200, 600));
+  live2dWidget->setGeometry(QRect(400, 0, 300, 600));
   chatWidget = new ChatWidget(centralWidget);
   chatWidget->setGeometry(QRect(0, 100, 400, 300));
   mainWindow->setCentralWidget(centralWidget);

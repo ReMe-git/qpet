@@ -15,11 +15,8 @@ using namespace LAppDefine;
 float Live2dWidget::ratio;
 QElapsedTimer Live2dWidget::elapsedTimer;
 
-Live2dWidget::Live2dWidget(QWidget *parent, QMainWindow *mainWindow)
+Live2dWidget::Live2dWidget(QWidget *parent)
     : QOpenGLWidget(parent) {
-  this->mainWindow = mainWindow;
-  this->m_lastPos.setX(0);
-  this->m_lastPos.setY(0);
   this->setAttribute(Qt::WA_AlwaysStackOnTop);
   this->setAttribute(Qt::WA_TranslucentBackground);
 
@@ -91,46 +88,13 @@ void Live2dWidget::updateMotions() {
 }
 
 void Live2dWidget::mousePressEvent(QMouseEvent *event) {
-  if (event->button() == Qt::LeftButton && !m_isPress) {
-    m_isPress = true;
-    m_lastPos = event->globalPosition().toPoint();
-    if (DebugLogEnable) {
-      LAppPal::PrintLogLn("[Qt]mouse press: {x:%.2f, y:%.2f}",
-                          event->globalPosition().x(),
-                          event->globalPosition().y());
-    }
-  }
   LAppDelegate::GetInstance()->mousePressEvent(event);
 }  // mousePressEvent
 
 void Live2dWidget::mouseMoveEvent(QMouseEvent *event) {
-  if (m_isPress) {
-    int dx = event->globalPosition().x() - m_lastPos.x();
-    int dy = event->globalPosition().y() - m_lastPos.y();
-    m_lastPos = event->globalPosition().toPoint();
-    QMainWindow *wp = this->mainWindow;
-    wp->move(wp->x() + dx, wp->y() + dy);
-    if (DebugLogEnable) {
-      LAppPal::PrintLogLn("[Qt]mouse move: {x:%.2f, y:%.2f}",
-                          event->globalPosition().x(),
-                          event->globalPosition().y());
-    }
-  }
   LAppDelegate::GetInstance()->mouseMoveEvent(event);
 }  // mouseMoveEvent
 
 void Live2dWidget::mouseReleaseEvent(QMouseEvent *event) {
-  if (m_isPress) {
-    int dx = event->globalPosition().x() - m_lastPos.x();
-    int dy = event->globalPosition().y() - m_lastPos.y();
-    QMainWindow *wp = this->mainWindow;
-    wp->move(wp->x() + dx, wp->y() + dy);
-    m_isPress = false;
-    if (DebugLogEnable) {
-      LAppPal::PrintLogLn("[Qt]mouse release: {x:%.2f, y:%.2f}",
-                          event->globalPosition().x(),
-                          event->globalPosition().y());
-    }
-  }
   LAppDelegate::GetInstance()->mouseReleaseEvent(event);
 }  // mouseReleaseEvent

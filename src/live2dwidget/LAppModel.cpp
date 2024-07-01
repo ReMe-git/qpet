@@ -391,7 +391,7 @@ void LAppModel::Update() {
 
     // 状態更新/RMS値取得
     LAppDelegate::GetInstance()->GetWavFileHandler()->Update(deltaTimeSeconds);
-    value = LAppDelegate::GetInstance()->GetWavFileHandler()->GetRms() * 2.5f;
+    value = LAppDelegate::GetInstance()->GetWavFileHandler()->GetRms();
 
     for (csmUint32 i = 0; i < _lipSyncIds.GetSize(); ++i) {
       _model->AddParameterValue(_lipSyncIds[i], value, 0.8f);

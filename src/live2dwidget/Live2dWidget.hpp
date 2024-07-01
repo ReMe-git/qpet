@@ -3,14 +3,13 @@
 #include <QAudioOutput>
 #include <QBuffer>
 #include <QElapsedTimer>
-#include <QMainWindow>
 #include <QMediaPlayer>
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
 
 class Live2dWidget : public QOpenGLWidget {
  public:
-  Live2dWidget(QWidget *parent = nullptr, QMainWindow *mainWindow = nullptr);
+  Live2dWidget(QWidget *parent = nullptr);
   void initializeGL() override;
   void resizeGL(int width, int height) override;
   void paintGL() override;
@@ -20,9 +19,6 @@ class Live2dWidget : public QOpenGLWidget {
   static QElapsedTimer elapsedTimer;
 
  protected:
-  bool m_isPress;
-  QPoint m_lastPos;
-  QMainWindow *mainWindow;
   QMediaPlayer *audioPlayer;
   QAudioOutput *audioOutput;
 
