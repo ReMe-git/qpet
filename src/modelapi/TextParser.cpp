@@ -113,7 +113,8 @@ void TextParser::SPlitTextByPunctuation(void) {
       }
       offset = i;
       buffer.clear();
-    } else {
+    } else if (wc == L'*' || wc == L'#' || wc == L'/' || wc == L'\\') {
+    }else {
       buffer += wc;
     }
   }
