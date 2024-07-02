@@ -1,5 +1,11 @@
 #pragma once
 
+#include <qcoreapplication.h>
+#include <qfont.h>
+#include <qgridlayout.h>
+#include <qlayout.h>
+#include <qnamespace.h>
+#include <qpushbutton.h>
 #include <QCoreApplication>
 #include <QFile>
 #include <QLineEdit>
@@ -8,6 +14,7 @@
 #include <QTextEdit>
 #include <QTimer>
 #include <QWidget>
+#include <QGridLayout>
 #include <string>
 
 #include "live2dwidget/LAppDefine.hpp"
@@ -25,12 +32,21 @@ class ChatWidget : public QWidget {
     chatText->setGeometry(QRect(0, 0, 400, 250));
     chatText->setReadOnly(true);
     chatText->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    QFont textFont = chatText->font();
+    textFont.setPointSize(12);
+    chatText->setFont(textFont);
+    chatText->setFontPointSize(12);
     chatEdit = new QLineEdit(this);
-    chatEdit->setGeometry(QRect(0, 250, 300, 50));
     sendButton = new QPushButton(this);
-    sendButton->setText(QString::fromStdString("Send"));
-    sendButton->setGeometry(QRect(300, 250, 100, 50));
+    sendButton->setText(QString::fromStdString("  Send"));
     connect(sendButton, &QPushButton::released, this, &ChatWidget::SendRequest);
+    chatLayout = new QGridLayout(this);
+    chatLayout->setSpacing(0);
+    chatLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
+    chatLayout->setContentsMargins(0, 0, 0, 0);
+    chatLayout->addWidget(chatText, 0, 0, 79,100);
+    chatLayout->addWidget(chatEdit, 80, 0,20, 79);
+    chatLayout->addWidget(sendButton, 80, 80,20, 20);
     QTimer *timer = new QTimer();
     connect(timer, &QTimer::timeout, this, &ChatWidget::UpdateChatContent);
     timer->start(100);
@@ -40,6 +56,7 @@ class ChatWidget : public QWidget {
   QTextEdit *chatText;
   QLineEdit *chatEdit;
   QPushButton *sendButton;
+  QGridLayout *chatLayout;
   std::string chatContent;
   TextParser chatParser;
 
@@ -52,7 +69,7 @@ class ChatWidget : public QWidget {
       chatParser.SPlitTextByPunctuation();
       TextStruct newText;
       if (chatParser.GetText(newText)) {
-        chatText->setPlainText(QString::fromStdString(chatContent));
+        chatText->setMarkdown(QString::fromStdString(chatContent));
         chatText->moveCursor(QTextCursor::End);
         std::string content;
         newText.GetContent(content);

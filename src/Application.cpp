@@ -1,4 +1,6 @@
 #include "Application.hpp"
+#include <qboxlayout.h>
+#include <qgridlayout.h>
 
 #include <QCoreApplication>
 #include <QFile>
@@ -21,19 +23,19 @@ void Application::SetupApp(void) {
   mainWindow->setWindowFlags(Qt::WindowStaysOnTopHint |
                              Qt::FramelessWindowHint);
   mainWindow->setAttribute(Qt::WA_TranslucentBackground);
-  mainWindow->resize(700, 600);
+  mainWindow->setFixedSize(650, 600);
   centralWidget = new QWidget(mainWindow);
   centralWidget->setObjectName(QString::fromUtf8("centralwidget"));
-  centralWidget->setGeometry(QRect(400, 0, 200, 600));
   live2dWidget = new Live2dWidget(centralWidget);
   live2dWidget->setObjectName(QString::fromUtf8("openGLWidget"));
-  live2dWidget->setGeometry(QRect(400, 0, 300, 600));
-  chatWidget = new ChatWidget(centralWidget);
-  chatWidget->setGeometry(QRect(0, 100, 400, 300));
+  chatWidget = new ChatWidget(mainWindow);
   mainWindow->setCentralWidget(centralWidget);
   systemTray = new QSystemTrayIcon(mainWindow);
   systemTray->setVisible(true);
   systemTray->setIcon(
       QIcon(QCoreApplication::applicationDirPath() + "/Resources/icon.png"));
+  appLayout = new QGridLayout(centralWidget);
+  appLayout->addWidget(chatWidget, 10, 0, 70, 40);
+  appLayout->addWidget(live2dWidget, 0, 40, 100, 60);
   mainWindow->show();
 }
