@@ -35,7 +35,10 @@ void Application::SetupApp(void) {
   systemTray->setIcon(
       QIcon(QCoreApplication::applicationDirPath() + "/Resources/icon.png"));
   appLayout = new QGridLayout(centralWidget);
-  appLayout->addWidget(chatWidget, 10, 0, 70, 40);
-  appLayout->addWidget(live2dWidget, 0, 40, 100, 60);
+  appLayout->setSpacing(0);
+  appLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
+  appLayout->setContentsMargins(0, 0, 0, 0);
+  appLayout->addWidget(chatWidget, 30, 0, 50, 60);
+  appLayout->addWidget(live2dWidget, 0, 60, 100, 40);
   mainWindow->show();
 }

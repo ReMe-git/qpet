@@ -1,11 +1,13 @@
 #pragma once
 
+#include <qboxlayout.h>
 #include <qcoreapplication.h>
 #include <qfont.h>
 #include <qgridlayout.h>
 #include <qlayout.h>
 #include <qnamespace.h>
 #include <qpushbutton.h>
+#include <qtextedit.h>
 #include <QCoreApplication>
 #include <QFile>
 #include <QLineEdit>
@@ -29,7 +31,6 @@ class ChatWidget : public QWidget {
  public:
   ChatWidget(QWidget *parent = nullptr) : QWidget(parent) {
     chatText = new QTextEdit(this);
-    chatText->setGeometry(QRect(0, 0, 400, 250));
     chatText->setReadOnly(true);
     chatText->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     QFont textFont = chatText->font();
@@ -40,13 +41,23 @@ class ChatWidget : public QWidget {
     sendButton = new QPushButton(this);
     sendButton->setText(QString::fromStdString("  Send"));
     connect(sendButton, &QPushButton::released, this, &ChatWidget::SendRequest);
+    hchatLayout = new QHBoxLayout();
+    hchatLayout->setSpacing(3);
+    hchatLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
+    hchatLayout->setContentsMargins(0, 0, 0, 0);
+    hchatLayout->addWidget(chatEdit);
+    hchatLayout->addWidget(sendButton);
+    vchatLayout = new QVBoxLayout();
+    vchatLayout->setSpacing(3);
+    vchatLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
+    vchatLayout->setContentsMargins(0, 0, 0, 0);
+    vchatLayout->addWidget(chatText);
     chatLayout = new QGridLayout(this);
-    chatLayout->setSpacing(0);
+    chatLayout->setSpacing(3);
     chatLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
     chatLayout->setContentsMargins(0, 0, 0, 0);
-    chatLayout->addWidget(chatText, 0, 0, 79,100);
-    chatLayout->addWidget(chatEdit, 80, 0,20, 79);
-    chatLayout->addWidget(sendButton, 80, 80,20, 20);
+    chatLayout->addLayout(vchatLayout, 0, 0, 2, 1);
+    chatLayout->addLayout(hchatLayout, 2, 0, 1, 1);
     QTimer *timer = new QTimer();
     connect(timer, &QTimer::timeout, this, &ChatWidget::UpdateChatContent);
     timer->start(100);
@@ -57,6 +68,8 @@ class ChatWidget : public QWidget {
   QLineEdit *chatEdit;
   QPushButton *sendButton;
   QGridLayout *chatLayout;
+  QVBoxLayout *vchatLayout;
+  QHBoxLayout *hchatLayout;
   std::string chatContent;
   TextParser chatParser;
 
