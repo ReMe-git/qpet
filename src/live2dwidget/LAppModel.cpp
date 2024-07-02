@@ -16,8 +16,7 @@
 #include <Physics/CubismPhysics.hpp>
 #include <Rendering/OpenGL/CubismRenderer_OpenGLES2.hpp>
 #include <Utils/CubismString.hpp>
-#include <fstream>
-#include <vector>
+#include <cmath>
 
 #include "LAppDefine.hpp"
 #include "LAppDelegate.hpp"
@@ -392,6 +391,7 @@ void LAppModel::Update() {
     // 状態更新/RMS値取得
     LAppDelegate::GetInstance()->GetWavFileHandler()->Update(deltaTimeSeconds);
     value = LAppDelegate::GetInstance()->GetWavFileHandler()->GetRms();
+    value = sqrt(value);
 
     for (csmUint32 i = 0; i < _lipSyncIds.GetSize(); ++i) {
       _model->AddParameterValue(_lipSyncIds[i], value, 0.8f);
