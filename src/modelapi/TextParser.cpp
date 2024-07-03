@@ -104,8 +104,8 @@ void TextParser::SPlitTextByPunctuation(void) {
 
   for (; i < content.length(); i++) {
     wchar_t wc = content.c_str()[i];
-    if (wc == L',' || wc == L'.' || wc == L'?' ||
-     wc == L'。' || wc == L'，' || wc == L'？' || wc == L'\n' || wc == L'\r') {
+    if (wc == L',' || wc == L'.' || wc == L'?' || wc == L'!' ||
+     wc == L'。' || wc == L'，' || wc == L'？' || wc == L'！' || wc == L'\n' || wc == L'\r') {
       if (buffer.length() > 0) {
         buffer += wc;
         TextStruct newText(converter.to_bytes(buffer), -1);
