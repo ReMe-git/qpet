@@ -32,8 +32,7 @@ class TextParser {
   TextParser(std::string content) { c_content = content; offset = 0; }
   void SetText(std::string content) { c_content = content; }
   void AppendText(std::string content) { c_content += content; }
-  void SplitTextByLanguageType(void);
-  void SPlitTextByPunctuation(void);
+  void SplitText(void);
   bool GetText(TextStruct &ret) {
     if (!textQueue.empty()) {
       ret = textQueue.front();

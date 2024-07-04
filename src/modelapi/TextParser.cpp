@@ -3,7 +3,6 @@
 #include <codecvt>
 #include <locale>
 #include <string>
-#include <iostream>
 
 // 判断是否是中文字符
 static bool isChinese(wchar_t ch) {
@@ -23,99 +22,58 @@ static bool isEnglish(wchar_t ch) {
          (ch >= 0x0061 && ch <= 0x007A);    // 小写字母
 }
 
-// 判断是否是全角标点符号
-static bool isFullwidthPunctuation(wchar_t ch) {
-  return (ch >= 0xFF01 &&
-          ch <= 0xFF0F) ||  // 全角标点符号 ! " # $ % & ' ( ) * + , - . /
-         (ch >= 0xFF1A && ch <= 0xFF1F) ||  // 全角标点符号 : ; < = > ? @
-         (ch >= 0xFF3B && ch <= 0xFF3F) ||  // 全角标点符号 [ \ ] ^ _ `
-         (ch >= 0xFF5B && ch <= 0xFF60) ||  // 全角标点符号 { | } ~
-         (ch >= 0x3000 && ch <= 0x303F);    // CJK 标点符号
+// 判断是否是一句话的结尾
+static bool isEnd(wchar_t ch) {
+	return (ch == L',' || ch == L'.' || ch == L'?' ||
+			ch == L'!' || ch == L'。' || ch == L'，' ||
+			ch == L'？' || ch == L'！' || ch == L'\n' || ch == L'\r');
 }
 
-// 判断是否是半角标点符号
-static bool isHalfwidthPunctuation(wchar_t ch) {
-  return (ch >= 0x0021 &&
-          ch <= 0x002F) ||  // 半角标点符号 ! " # $ % & ' ( ) * + , - . /
-         (ch >= 0x003A && ch <= 0x003F) ||  // 半角标点符号 : ; < = > ? @
-         (ch >= 0x005B && ch <= 0x005F) ||  // 半角标点符号 [ \ ] ^ _ `
-         (ch >= 0x007B && ch <= 0x007E);    // 半角标点符号 { | } ~
+// 判断是否是需要丢弃的字符
+static bool isDrop(wchar_t ch) {
+	return ch == L'*' || ch == L'#' || ch == L'/' || ch == L'\\';
 }
 
-// 判断是否是阿拉伯数字
-static bool isArabicNumber(wchar_t ch) {
-  return (ch >= 0x0030 && ch <= 0x0039);  // 阿拉伯数字 0-9
-}
-
-// 判断是否是换行符
-static bool isNewline(wchar_t ch) {
-  return ch == L'\n' || ch == L'\r';  // 换行符 \n 和 \r
-}
-
-void TextParser::SplitTextByLanguageType(void) {
+void TextParser::SplitText(void) {
   std::wstring_convert<std::codecvt_utf8<wchar_t> > converter;
   std::wstring buffer, content;
-  int type = -1;
+  int i, type = -1;
   content = converter.from_bytes(c_content);
 
-  for (wchar_t wc : content) {
-    if (isEnglish(wc) || isHalfwidthPunctuation(wc)) {
+  for (i = offset; i < content.length(); i++) {
+		wchar_t wc = content.c_str()[i];
+    if (isEnglish(wc)) {
       if (type != EN_US && type >= 0) {
         TextStruct newText(converter.to_bytes(buffer), type);
         textQueue.push(newText);
         type = EN_US;
         buffer.clear();
+				offset = i;
         buffer += wc;
       } else {  // push buffer into queue
         type = EN_US;
         buffer += wc;
       }  // push char into buffer
-    } else if (isChinese(wc) || isFullwidthPunctuation(wc)) {
+    } else if (isChinese(wc)) {
       if (type != ZH_CN && type >= 0) {
         TextStruct newText(converter.to_bytes(buffer), type);
         textQueue.push(newText);
         type = ZH_CN;
         buffer.clear();
         buffer += wc;
+				offset = i;
       } else {  // push buffer into queue
         type = ZH_CN;
         buffer += wc;
       }  // push char into buffer
-    } else if (isNewline(wc) && (buffer.length() > 0)) {
+    } else if (isEnd(wc) && (buffer.length() > 0)) {
       TextStruct newText(converter.to_bytes(buffer), type);
       textQueue.push(newText);
       buffer.clear();
-      type = -1;
-    } else {
+			offset = i;
+    } else if (isDrop(wc)) {
+		} else {
       buffer += wc;
     }  // check language type
-
   }  // range string
-  TextStruct newText(converter.to_bytes(buffer), type);
-  textQueue.push(newText);
-  buffer.clear();
-}  // SplitTextByLanguageType
-
-void TextParser::SPlitTextByPunctuation(void) {
-  std::wstring_convert<std::codecvt_utf8<wchar_t> > converter;
-  std::wstring buffer, content; 
-  content = converter.from_bytes(c_content);
-  int i = offset;
-
-  for (; i < content.length(); i++) {
-    wchar_t wc = content.c_str()[i];
-    if (wc == L',' || wc == L'.' || wc == L'?' || wc == L'!' ||
-     wc == L'。' || wc == L'，' || wc == L'？' || wc == L'！' || wc == L'\n' || wc == L'\r') {
-      if (buffer.length() > 0) {
-        buffer += wc;
-        TextStruct newText(converter.to_bytes(buffer), -1);
-        textQueue.push(newText);
-      }
-      offset = i;
-      buffer.clear();
-    } else if (wc == L'*' || wc == L'#' || wc == L'/' || wc == L'\\') {
-    }else {
-      buffer += wc;
-    }
-  }
-} // SPlitTextByPunctuation
+}  // SplitText

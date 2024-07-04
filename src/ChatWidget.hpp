@@ -78,26 +78,18 @@ class ChatWidget : public QWidget {
   QVBoxLayout *vchatLayout;
   QHBoxLayout *hchatLayout;
   std::string chatContent;
-  TextParser chatParser;
 
  private slots:
   void UpdateChatContent(void) {
     std::string data;
     if (OllamaApi::GetRespone(data)) {
       chatContent += data;
-      chatParser.AppendText(data);
-      chatParser.SPlitTextByPunctuation();
-      TextStruct newText;
-      if (chatParser.GetText(newText)) {
-        chatText->setMarkdown(QString::fromStdString(chatContent));
-        chatText->moveCursor(QTextCursor::End);
-        std::string content;
-        newText.GetContent(content);
-        PiperTTSApi::SendRequest(content);
-        if (DebugLogEnable) {
-          LAppPal::PrintLogLn("[Qt]update chat content");
-        }
-      }
+      chatText->setMarkdown(QString::fromStdString(chatContent));
+      chatText->moveCursor(QTextCursor::End);
+			PiperTTSApi::SendRequest(data);
+			if (DebugLogEnable) {
+				LAppPal::PrintLogLn("[Qt]update chat content");
+		}
     }
   }
 

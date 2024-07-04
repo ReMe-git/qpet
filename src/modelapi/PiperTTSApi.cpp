@@ -115,6 +115,7 @@ void PiperTTSApi::InitApi(std::string apiUrl, std::string zhModel,
 
 void PiperTTSApi::Run(void) {
   std::string requestContent;
+	TextParser parser(requestContent);
   while (true) {
     std::unique_lock<std::mutex> rlk(requestLock);
     while (requestQueue.empty()) {
@@ -129,10 +130,10 @@ void PiperTTSApi::Run(void) {
     if (DebugLogEnable) {
       LAppPal::PrintLogLn("[PiperTTS]api get request");
     }
-    TextParser parser(requestContent);
+		parser.AppendText(requestContent);
     TextStruct text;
-    parser.SplitTextByLanguageType();
-    while (parser.GetText(text)) {
+    parser.SplitText();
+    if (parser.GetText(text)) {
       std::string content;
       text.GetContent(content);
       if (DebugLogEnable) {
