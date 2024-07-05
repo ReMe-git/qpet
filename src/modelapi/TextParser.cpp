@@ -4,7 +4,6 @@
 #include <locale>
 #include <string>
 
-// 判断是否是中文字符
 static bool isChinese(wchar_t ch) {
   return (ch >= 0x4E00 && ch <= 0x9FFF) ||    // 基本汉字
          (ch >= 0x3400 && ch <= 0x4DBF) ||    // 扩展A区
@@ -14,25 +13,23 @@ static bool isChinese(wchar_t ch) {
          (ch >= 0x2B820 && ch <= 0x2CEAF) ||  // 扩展E区
          (ch >= 0xF900 && ch <= 0xFAFF) ||    // 兼容汉字
          (ch >= 0x2F800 && ch <= 0x2FA1F);    // 兼容扩展
-}
+} // isChinese
 
-// 判断是否是英文字符
 static bool isEnglish(wchar_t ch) {
   return (ch >= 0x0041 && ch <= 0x005A) ||  // 大写字母
          (ch >= 0x0061 && ch <= 0x007A);    // 小写字母
-}
+} // isEnglish
 
-// 判断是否是一句话的结尾
-static bool isEnd(wchar_t ch) {
-	return (ch == L',' || ch == L'.' || ch == L'?' ||
-			ch == L'!' || ch == L'。' || ch == L'，' ||
+static bool isEndofSentence(wchar_t ch) {
+	return (ch == L',' || ch == L'.' || ch == L'?' || ch == L':' || ch == L';' ||
+			ch == L'!' || ch == L'。' || ch == L'，' || ch == L'：' ||
 			ch == L'？' || ch == L'！' || ch == L'\n' || ch == L'\r');
-}
+} // isEndofSentence
 
-// 判断是否是需要丢弃的字符
-static bool isDrop(wchar_t ch) {
-	return ch == L'*' || ch == L'#' || ch == L'/' || ch == L'\\';
-}
+static bool isNumber(wchar_t ch)
+{
+  return ch >= L'0' && ch <= L'9';
+} // isNumber
 
 void TextParser::SplitText(void) {
   std::wstring_convert<std::codecvt_utf8<wchar_t> > converter;
@@ -66,14 +63,16 @@ void TextParser::SplitText(void) {
         type = ZH_CN;
         buffer += wc;
       }  // push char into buffer
-    } else if (isEnd(wc) && (buffer.length() > 0)) {
+    } else if (isEndofSentence(wc) && (buffer.length() > 0)) {
+      if (type == -1)
+        type = EN_US;
       TextStruct newText(converter.to_bytes(buffer), type);
       textQueue.push(newText);
       buffer.clear();
 			offset = i;
-    } else if (isDrop(wc)) {
-		} else {
+    } else if (isNumber(wc)) {
       buffer += wc;
+		} else {
     }  // check language type
   }  // range string
 }  // SplitText
