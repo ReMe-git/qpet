@@ -23,6 +23,7 @@ void Application::SetupApp(void) {
   mainWindow->setWindowFlags(Qt::WindowStaysOnTopHint |
                              Qt::FramelessWindowHint);
   mainWindow->setAttribute(Qt::WA_TranslucentBackground);
+  mainWindow->setWindowIcon(QIcon(QCoreApplication::applicationDirPath() + "/Resources/icon.png"));
   mainWindow->setFixedSize(650, 600);
   centralWidget = new QWidget(mainWindow);
   centralWidget->setObjectName(QString::fromUtf8("centralwidget"));
