@@ -1,13 +1,5 @@
 #pragma once
 
-#include <qboxlayout.h>
-#include <qcoreapplication.h>
-#include <qfont.h>
-#include <qgridlayout.h>
-#include <qlayout.h>
-#include <qnamespace.h>
-#include <qpushbutton.h>
-#include <qtextedit.h>
 #include <QCoreApplication>
 #include <QFile>
 #include <QLineEdit>
@@ -49,18 +41,18 @@ class ChatWidget : public QWidget {
     sendButton->setText(QString::fromStdString("  Send"));
     connect(sendButton, &QPushButton::released, this, &ChatWidget::SendRequest);
     hchatLayout = new QHBoxLayout();
-    hchatLayout->setSpacing(3);
+    hchatLayout->setSpacing(1);
     hchatLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
     hchatLayout->setContentsMargins(0, 0, 0, 0);
     hchatLayout->addWidget(chatEdit);
     hchatLayout->addWidget(sendButton);
     vchatLayout = new QVBoxLayout();
-    vchatLayout->setSpacing(3);
+    vchatLayout->setSpacing(1);
     vchatLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
     vchatLayout->setContentsMargins(0, 0, 0, 0);
     vchatLayout->addWidget(chatText);
     chatLayout = new QGridLayout(this);
-    chatLayout->setSpacing(3);
+    chatLayout->setSpacing(1);
     chatLayout->setSizeConstraint(QLayout::SetDefaultConstraint);
     chatLayout->setContentsMargins(0, 0, 0, 0);
     chatLayout->addLayout(vchatLayout, 0, 0, 1, 1);
