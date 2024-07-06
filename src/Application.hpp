@@ -1,30 +1,41 @@
 #pragma once
 
-#include <qaction.h>
-#include <qboxlayout.h>
-#include <qgridlayout.h>
-#include <qstackedlayout.h>
-#include <qstackedwidget.h>
-#include <qwidget.h>
 #include <QSystemTrayIcon>
-#include <QtCore/QVariant>
-#include <QtWidgets/QApplication>
-#include <QtWidgets/QMainWindow>
-#include <QtWidgets/QWidget>
+#include <QApplication>
+#include <QMainWindow>
+#include <QWidget>
 #include <QGridLayout>
+#include <QThread>
 
 #include "ChatWidget.hpp"
 #include "live2dwidget/Live2dWidget.hpp"
+#include "modelapi/OllamaApi.hpp"
+#include "modelapi/PiperTTSApi.hpp"
+
+
+class OllamaWorker : public QThread {
+ public:
+  void run(void) { OllamaApi::Run(); }
+};
+
+class PiperTTSWorker : public QThread {
+ public:
+  void run(void) { PiperTTSApi::Run(); }
+};
 
 class Application {
  public:
-  void SetupApp(void);
+  int SetupApp(int argc, char **argv);
 
  private:
+  QApplication *application;
   QMainWindow *mainWindow;
   QWidget *centralWidget;
   Live2dWidget *live2dWidget;
   ChatWidget *chatWidget;
   QGridLayout *appLayout;
   QSystemTrayIcon *systemTray;
+  QMenu *trayMenu;
+  PiperTTSWorker pipertts;
+  OllamaWorker ollama;
 };
