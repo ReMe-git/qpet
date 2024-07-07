@@ -36,6 +36,8 @@ class Application {
   QGridLayout *appLayout;
   QSystemTrayIcon *systemTray;
   QMenu *trayMenu;
+  QAction *chatAction;
+  QAction *exitAction;
   PiperTTSWorker pipertts;
   OllamaWorker ollama;
 };
