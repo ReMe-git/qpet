@@ -22,6 +22,7 @@ QTextEdit {
 	border-color: rgb(58, 58, 58);
 	border-style: inset;
 	color: #a9b7c6;
+	padding: 5px;
 }
 QPlainTextEdit {
 	selection-background-color:#a9b1d6;
@@ -30,6 +31,7 @@ QPlainTextEdit {
 	border-color: rgb(58, 58, 58);
 	border-style: inset;
 	color: #a9b7c6;
+	padding: 5px;
 }
 QPushButton{
 	border-top-color: transparent;
@@ -123,6 +125,7 @@ QLineEdit {
 	background:#1a1b26;	
   	selection-background-color:#a9b1d6;
 	selection-color: #FFFFFF;
+	padding: 5px;
 }
 QLabel {
 	color: #a9b7c6;
