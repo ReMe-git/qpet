@@ -1,6 +1,4 @@
 #include "Application.hpp"
-#include <qaction.h>
-#include <qapplication.h>
 
 #include <QCoreApplication>
 #include <QFile>
@@ -14,8 +12,8 @@
 
 int Application::SetupApp(int argc, char **argv) {
   application = new QApplication(argc, argv);
-  OllamaApi::InitApi("http://localhost:11434/api/chat", "qwen2:7b");
-  PiperTTSApi::InitApi("http://localhost:8080/tts", "voice-zh_CN-huayan-medium",
+  OllamaApi::InitApi("http://localhost:11434/api/chat", "qwen2:1.5b");
+  PiperTTSApi::InitApi("http://localhost:8080/tts", "voice-zh-cn-huayan-x-low",
                        "voice-en-us-amy-low");
   mainWindow = new QMainWindow();
   QFile styleFile(QCoreApplication::applicationDirPath() +
@@ -25,13 +23,12 @@ int Application::SetupApp(int argc, char **argv) {
   styleFile.close();
   mainWindow->setWindowFlags(Qt::WindowStaysOnTopHint |
                              Qt::FramelessWindowHint | Qt::Tool);
-  mainWindow->setAttribute(Qt::WA_TranslucentBackground);
+  mainWindow->setAttribute(Qt::WA_TranslucentBackground, true);
   mainWindow->setWindowIcon(QIcon(QCoreApplication::applicationDirPath() + "/Resources/icon.png"));
   mainWindow->setFixedSize(650, 600);
   centralWidget = new QWidget(mainWindow);
-  centralWidget->setObjectName(QString::fromUtf8("centralwidget"));
+  centralWidget->setFixedSize(650, 600);
   live2dWidget = new Live2dWidget(centralWidget);
-  live2dWidget->setObjectName(QString::fromUtf8("openGLWidget"));
   chatWidget = new ChatWidget(mainWindow);
   mainWindow->setCentralWidget(centralWidget);
   appLayout = new QGridLayout(centralWidget);
@@ -45,17 +42,14 @@ int Application::SetupApp(int argc, char **argv) {
   systemTray->setIcon(
       QIcon(QCoreApplication::applicationDirPath() + "/Resources/icon.png"));
   trayMenu = new QMenu();
-  QAction *showAction = new QAction("Show", trayMenu);
-  QAction *hideAction = new QAction("Hide", trayMenu);
-  QAction *exitAction = new QAction("Exit", trayMenu);
-  trayMenu->addAction(showAction);
-  trayMenu->addAction(hideAction);
+  chatAction = new QAction("󰭻 Chat", trayMenu);
+  exitAction = new QAction("󰅙 Exit", trayMenu);
+  trayMenu->addAction(chatAction);
   trayMenu->addAction(exitAction);
-  mainWindow->connect(showAction, &QAction::triggered, [this]() {
-    if (!mainWindow->isVisible()) mainWindow->setVisible(true);
-  });
-  mainWindow->connect(hideAction, &QAction::triggered, [this]() {
-    if (mainWindow->isVisible()) mainWindow->setVisible(false);
+
+  mainWindow->connect(chatAction, &QAction::triggered, [this]() {
+    if (!chatWidget->isVisible()) { chatWidget->setVisible(true); }
+    else { chatWidget->setVisible(false); }
   });
   mainWindow->connect(exitAction, &QAction::triggered, [this]() {
     ollama.terminate();
