@@ -87,9 +87,7 @@ void PiperTTSApi::CallApi(std::string input, int type) {
 
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
-      if (DebugLogEnable) {
-        LAppPal::PrintLogLn("[PpierTTS]fail call api, error: %d", res);
-      }
+      LAppPal::PrintLogLn("[PpierTTS]fail call api, error: %d", res);
     }
     curl_easy_cleanup(curl);
     curl_slist_free_all(headers);
@@ -116,30 +114,34 @@ void PiperTTSApi::InitApi(std::string apiUrl, std::string zhModel,
 void PiperTTSApi::Run(void) {
   std::string requestContent;
 	TextParser parser(requestContent);
-  while (true) {
+  
+	while (true) {
     std::unique_lock<std::mutex> rlk(requestLock);
-    while (requestQueue.empty()) {
+		
+		if (requestQueue.empty() && parser.isEmpty()) {
       if (DebugLogEnable) {
         LAppPal::PrintLogLn("[PiperTTS]api wait request");
       }
       hasRequest.wait(rlk);
-    }
-    requestContent = requestQueue.front();
-    requestQueue.pop();
-    requestLock.unlock();
-    if (DebugLogEnable) {
-      LAppPal::PrintLogLn("[PiperTTS]api get request");
-    }
-		parser.AppendText(requestContent);
-    TextStruct text;
-    parser.SplitText();
-    if (parser.GetText(text)) {
-      std::string content;
-      text.GetContent(content);
-      if (DebugLogEnable) {
-        LAppPal::PrintLogLn("[PiperTTS]get content %s", content.c_str());
-      }
+		} else if (!requestQueue.empty()) {
+			requestContent = requestQueue.front();
+			requestQueue.pop();
+			parser.AppendText(requestContent);
+			parser.SplitText();
+			if (DebugLogEnable) {
+				LAppPal::PrintLogLn("[PiperTTS]api get request");
+			}
+			requestLock.unlock();
+		}
+
+  	TextStruct text;	
+		if (parser.GetText(text)) {
+			std::string content; 
+			text.GetContent(content);
       CallApi(content, text.GetLanguageType());
+      if (DebugLogEnable) {
+        LAppPal::PrintLogLn("[PiperTTS]deal content %s", content.c_str());
+      }
     }
   }
 }  // Run

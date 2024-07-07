@@ -42,6 +42,7 @@ class TextParser {
       return false;
     }
   }
+	bool isEmpty(void) { return textQueue.empty(); }
 
  private:
   int offset;

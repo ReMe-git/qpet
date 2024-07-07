@@ -21,15 +21,15 @@ static bool isEnglish(wchar_t ch) {
 } // isEnglish
 
 static bool isEndofSentence(wchar_t ch) {
-	return (ch == L',' || ch == L'.' || ch == L'?' || ch == L':' || ch == L';' ||
+	return (ch == L',' || ch == L'.' || ch == L'?' || ch == L';' ||
 			ch == L'!' || ch == L'。' || ch == L'，' || ch == L'：' ||
 			ch == L'？' || ch == L'！' || ch == L'\n' || ch == L'\r');
 } // isEndofSentence
 
-static bool isNumber(wchar_t ch)
+static bool isHalf(wchar_t ch)
 {
-  return ch >= L'0' && ch <= L'9';
-} // isNumber
+	return (ch >= 0x0000 && ch <= 0x007F);
+} // isHalf
 
 void TextParser::SplitText(void) {
   std::wstring_convert<std::codecvt_utf8<wchar_t> > converter;
@@ -70,9 +70,11 @@ void TextParser::SplitText(void) {
       textQueue.push(newText);
       buffer.clear();
 			offset = i;
-    } else if (isNumber(wc)) {
+    } else if (isHalf(wc)) {
       buffer += wc;
 		} else {
     }  // check language type
   }  // range string
+	c_content = converter.to_bytes(content.substr(offset));
+	offset = 0;
 }  // SplitText
