@@ -68,7 +68,12 @@ size_t OllamaApi::OllamaWriteCallback(void *contents, size_t size, size_t nmemb,
     LAppPal::PrintLogLn("[Ollama]fail parse json");
   }
   delete reader;
-  std::string appendContent = respone["message"]["content"].asString();
+	std::string appendContent;
+  if (respone["message"]["content"] && respone["message"]["content"].isString()) {
+		appendContent = respone["message"]["content"].asString();
+	} else {
+		LAppPal::PrintLogLn("[Ollama]inviaid value");
+	}
   readBuffer->append(appendContent.c_str(), appendContent.length());
   responeLock.lock();
   responeQueue.push(appendContent);
@@ -118,9 +123,7 @@ void OllamaApi::CallApi(const std::string question) {
 
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
-      if (DebugLogEnable) {
-        LAppPal::PrintLogLn("[Ollama]fail call ollama api, error: %d", res);
-      }
+      LAppPal::PrintLogLn("[Ollama]fail call ollama api, error: %d", res);
     }
     curl_easy_cleanup(curl);
     curl_slist_free_all(headers);
