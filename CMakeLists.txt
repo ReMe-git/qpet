@@ -4,8 +4,8 @@ cmake_minimum_required(VERSION 3.16)
 set(APP_NAME vpet)
 # Set directory paths.
 set(SDK_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
-set(CORE_PATH ${SDK_ROOT_PATH}/core)
-set(FRAMEWORK_PATH ${SDK_ROOT_PATH}/framework)
+set(CORE_PATH ${SDK_ROOT_PATH}/live2d/core)
+set(FRAMEWORK_PATH ${SDK_ROOT_PATH}/live2d/framework)
 set(STB_PATH ${SDK_ROOT_PATH}/stb)
 set(RES_PATH ${SDK_ROOT_PATH}/res)
 
@@ -42,10 +42,20 @@ add_subdirectory(${FRAMEWORK_PATH} ${CMAKE_CURRENT_BINARY_DIR}/framework)
 target_compile_definitions(Framework PUBLIC CSM_TARGET_LINUX_GL)
 # Link libraries to framework.
 
-target_link_libraries(Framework Live2DCubismCore Qt6::Core Qt6::Gui Qt6::Widgets Qt6::OpenGLWidgets Qt6::OpenGL Qt6::Multimedia)
+target_link_libraries(Framework
+	Live2DCubismCore
+	Qt6::OpenGL
+)
 
 # Find opengl libraries.
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets OpenGLWidgets OpenGL Multimedia)
+find_package(Qt6 REQUIRED COMPONENTS 
+	Core
+	Gui
+	Widgets
+	OpenGLWidgets
+	OpenGL
+	Multimedia
+)
 find_package(CURL)
 find_package(jsoncpp)
 
@@ -58,6 +68,12 @@ target_link_libraries(${APP_NAME}
   Framework
   CURL::libcurl
   jsoncpp
+	Qt6::Core
+	Qt6::Gui
+	Qt6::Widgets
+	Qt6::OpenGLWidgets
+	Qt6::OpenGL
+	Qt6::Multimedia
 )
 
 # Specify include directories.
