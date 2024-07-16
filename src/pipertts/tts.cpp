@@ -1,4 +1,5 @@
 #include "tts.hpp"
+#include <spdlog/spdlog.h>
 #include "piper.hpp"
 #include "../modelapi/TextParser.hpp"
 
@@ -29,8 +30,10 @@ bool PiperTTS::GetRespone(std::vector<char> &respone) {
 void PiperTTS::SendRequest(std::string request) {
   requestLock.lock();
   requestQueue.push(request);
+  spdlog::debug("[PiperTTS]send request");
   if (requestQueue.size() > 0) {
     hasRequest.notify_all();
+    spdlog::debug("[PiperTTS]notify worker");
   }
   requestLock.unlock();
 }  // PullRequest
@@ -55,22 +58,22 @@ void PiperTTS::Run(void) {
 		
 		if(requestQueue.empty() && parser.isEmpty()) {
 			hasRequest.wait(rlk);
-		} else {
+			spdlog::debug("[PiperTTS]wait request");
+		} else if (!requestQueue.empty()){
 			request = requestQueue.front();
 			requestQueue.pop();
-			requestLock.unlock();
 			parser.AppendText(request);
 			parser.SplitText();
+			spdlog::debug("[PiperTTS]api get request");
+			requestLock.unlock();
 		}
 
-  	TextStruct text;	
+  		TextStruct text;	
 		piper::SynthesisResult res;
-
 		if (parser.GetText(text)) {
 			std::string content; 
 			text.GetContent(content);
-			if (content.length() > 0)
-				piper::textToWavBuffer(c_config, c_voice, content, c_buffer, res);
+			piper::textToWavBuffer(c_config, c_voice, content, c_buffer, res);
 			if(!c_buffer.empty()) {
 				responeLock.lock();
 				responeQueue.push(c_buffer);
