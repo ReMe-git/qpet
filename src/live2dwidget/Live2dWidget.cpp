@@ -4,7 +4,7 @@
 
 #include <QTimer>
 
-#include "../modelapi/PiperTTSApi.hpp"
+#include "../pipertts/tts.hpp"
 #include "LAppDefine.hpp"
 #include "LAppDelegate.hpp"
 #include "LAppPal.hpp"
@@ -68,7 +68,7 @@ void Live2dWidget::updateMotions() {
   std::vector<char> wavData;
   QMediaPlayer::MediaStatus status = audioPlayer->mediaStatus();
   if (status == QMediaPlayer::NoMedia || status == QMediaPlayer::EndOfMedia) {
-    if (PiperTTSApi::GetRespone(wavData)) {
+    if (PiperTTS::GetRespone(wavData)) {
       if (DebugLogEnable) {
         LAppPal::PrintLogLn("[LIVE2D]get wavdata, size is %d", wavData.size());
       }

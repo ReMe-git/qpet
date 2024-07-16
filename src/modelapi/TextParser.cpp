@@ -31,6 +31,11 @@ static bool isHalf(wchar_t ch)
 	return (ch >= 0x0000 && ch <= 0x007F);
 } // isHalf
 
+static bool isFull(wchar_t ch)
+{
+	return (ch > 0x007F);
+} // isFull
+
 void TextParser::SplitText(void) {
   std::wstring_convert<std::codecvt_utf8<wchar_t> > converter;
   std::wstring buffer, content;
@@ -39,7 +44,15 @@ void TextParser::SplitText(void) {
 
   for (i = offset; i < content.length(); i++) {
 		wchar_t wc = content.c_str()[i];
-    if (isEnglish(wc)) {
+  if (isEndofSentence(wc) && (buffer.length() > 0)) {
+			buffer += wc;
+      if (type == -1)
+        type = EN_US;
+      TextStruct newText(converter.to_bytes(buffer), type);
+      textQueue.push(newText);
+      buffer.clear();
+			offset = i + 1;
+	}	else if (isEnglish(wc) || isHalf(wc)) {
       if (type != EN_US && type >= 0) {
         TextStruct newText(converter.to_bytes(buffer), type);
         textQueue.push(newText);
@@ -51,7 +64,7 @@ void TextParser::SplitText(void) {
         type = EN_US;
         buffer += wc;
       }  // push char into buffer
-    } else if (isChinese(wc)) {
+    } else if (isChinese(wc) || isFull(wc)) {
       if (type != ZH_CN && type >= 0) {
         TextStruct newText(converter.to_bytes(buffer), type);
         textQueue.push(newText);
@@ -63,15 +76,6 @@ void TextParser::SplitText(void) {
         type = ZH_CN;
         buffer += wc;
       }  // push char into buffer
-    } else if (isEndofSentence(wc) && (buffer.length() > 0)) {
-      if (type == -1)
-        type = EN_US;
-      TextStruct newText(converter.to_bytes(buffer), type);
-      textQueue.push(newText);
-      buffer.clear();
-			offset = i;
-    } else if (isHalf(wc)) {
-      buffer += wc;
 		} else {
     }  // check language type
   }  // range string

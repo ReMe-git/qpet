@@ -7,3 +7,4 @@ target_sources(${APP_NAME}
 
 add_subdirectory(live2dwidget)
 add_subdirectory(modelapi)
+add_subdirectory(pipertts)

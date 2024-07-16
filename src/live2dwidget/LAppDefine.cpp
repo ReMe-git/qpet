@@ -30,7 +30,7 @@ const csmFloat32 ViewLogicalMaxBottom = -2.0f;
 const csmFloat32 ViewLogicalMaxTop = 2.0f;
 
 // 相対パス
-const csmChar *ResourcesPath = "Resources/";
+const csmChar *ResourcesPath = "res/live2d/";
 
 // モデルの後ろにある背景の画像ファイル
 const csmChar *BackImageName = "back_class_normal.png";

@@ -10,7 +10,7 @@
 #include "ChatWidget.hpp"
 #include "live2dwidget/Live2dWidget.hpp"
 #include "modelapi/OllamaApi.hpp"
-#include "modelapi/PiperTTSApi.hpp"
+#include "pipertts/tts.hpp"
 
 
 class OllamaWorker : public QThread {
@@ -20,7 +20,7 @@ class OllamaWorker : public QThread {
 
 class PiperTTSWorker : public QThread {
  public:
-  void run(void) { PiperTTSApi::Run(); }
+  void run(void) { PiperTTS::Run(); }
 };
 
 class Application {

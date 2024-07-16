@@ -8,23 +8,28 @@
 #include <QAction>
 
 #include "modelapi/OllamaApi.hpp"
-#include "modelapi/PiperTTSApi.hpp"
+#include "pipertts/tts.hpp"
 
 int Application::SetupApp(int argc, char **argv) {
   application = new QApplication(argc, argv);
-  OllamaApi::InitApi("http://localhost:11434/api/chat", "qwen2:1.5b");
-  PiperTTSApi::InitApi("http://localhost:8080/tts", "voice-zh-cn-huayan-x-low",
-                       "voice-en-us-amy-low");
+  OllamaApi::InitApi("http://10.0.209.254:11434/api/chat", "qwen2:7b");
+  //PiperTTSApi::InitApi("http://localhost:8080/tts", "voice-zh-cn-huayan-x-low",
+  //                     "voice-en-us-amy-low");
+	std::string modelPath = QCoreApplication::applicationDirPath().toStdString() +
+		"/res/piper/models/en_US-amy-medium.onnx";
+	std::string eSpeakDataPath = QCoreApplication::applicationDirPath().toStdString() +
+		"/res/piper/espeak-ng-data";
+	PiperTTS::Initialize(modelPath, 0, eSpeakDataPath, false);
   mainWindow = new QMainWindow();
   QFile styleFile(QCoreApplication::applicationDirPath() +
-                  "/Resources/style.qss");
+                  "/res/ui/style.qss");
   styleFile.open(QIODevice::ReadOnly);
   mainWindow->setStyleSheet(styleFile.readAll());
   styleFile.close();
   mainWindow->setWindowFlags(Qt::WindowStaysOnTopHint |
                              Qt::FramelessWindowHint | Qt::Tool);
   mainWindow->setAttribute(Qt::WA_TranslucentBackground, true);
-  mainWindow->setWindowIcon(QIcon(QCoreApplication::applicationDirPath() + "/Resources/icon.png"));
+  mainWindow->setWindowIcon(QIcon(QCoreApplication::applicationDirPath() + "/res/ui/icon.png"));
   mainWindow->setFixedSize(650, 600);
   centralWidget = new QWidget(mainWindow);
   centralWidget->setFixedSize(650, 600);
@@ -40,7 +45,7 @@ int Application::SetupApp(int argc, char **argv) {
   systemTray = new QSystemTrayIcon(mainWindow);
   systemTray->setVisible(true);
   systemTray->setIcon(
-      QIcon(QCoreApplication::applicationDirPath() + "/Resources/icon.png"));
+      QIcon(QCoreApplication::applicationDirPath() + "/res/ui/icon.png"));
   trayMenu = new QMenu();
   chatAction = new QAction("󰭻 Chat", trayMenu);
   exitAction = new QAction("󰅙 Exit", trayMenu);
@@ -56,6 +61,7 @@ int Application::SetupApp(int argc, char **argv) {
     ollama.wait();
     pipertts.terminate();
     pipertts.wait();
+		PiperTTS::Release();
     application->exit();
   });
   systemTray->setContextMenu(trayMenu);

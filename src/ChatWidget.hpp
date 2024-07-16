@@ -14,8 +14,7 @@
 #include "live2dwidget/LAppDefine.hpp"
 #include "live2dwidget/LAppPal.hpp"
 #include "modelapi/OllamaApi.hpp"
-#include "modelapi/PiperTTSApi.hpp"
-#include "modelapi/TextParser.hpp"
+#include "pipertts/tts.hpp"
 
 using namespace LAppDefine;
 
@@ -78,7 +77,7 @@ class ChatWidget : public QWidget {
       chatContent += data;
       chatText->setMarkdown(QString::fromStdString(chatContent));
       chatText->moveCursor(QTextCursor::End);
-			PiperTTSApi::SendRequest(data);
+			PiperTTS::SendRequest(data);
 			if (DebugLogEnable) {
 				LAppPal::PrintLogLn("[Qt]update chat content");
 		}
