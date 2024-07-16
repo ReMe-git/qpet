@@ -26,6 +26,7 @@
 #include "LAppPal.hpp"
 #include "LAppSprite.hpp"
 #include "LAppView.hpp"
+#include "spdlog/spdlog.h"
 
 using namespace Csm;
 using namespace LAppDefine;
@@ -34,7 +35,7 @@ namespace {
 LAppLive2DManager *s_instance = NULL;
 
 void FinishedMotion(ACubismMotion *self) {
-  LAppPal::PrintLogLn("Motion Finished: %x", self);
+	//spdlog::info("Motion Finished: {}", self);
 }
 
 int CompareCsmString(const void *a, const void *b) {
@@ -145,20 +146,14 @@ void LAppLive2DManager::OnDrag(csmFloat32 x, csmFloat32 y) const {
 }
 
 void LAppLive2DManager::OnTap(csmFloat32 x, csmFloat32 y) {
-  if (DebugLogEnable) {
-    LAppPal::PrintLogLn("[APP]tap point: {x:%.2f y:%.2f}", x, y);
-  }
+	spdlog::debug("[LIVE2D]tap point: (x:{} y:{})", x, y);
 
   for (csmUint32 i = 0; i < _models.GetSize(); i++) {
     if (_models[i]->HitTest(HitAreaNameHead, x, y)) {
-      if (DebugLogEnable) {
-        LAppPal::PrintLogLn("[APP]hit area: [%s]", HitAreaNameHead);
-      }
+      spdlog::debug("[LIVE2D]hit area: [{}]", HitAreaNameHead);
       _models[i]->SetRandomExpression();
     } else if (_models[i]->HitTest(HitAreaNameBody, x, y)) {
-      if (DebugLogEnable) {
-        LAppPal::PrintLogLn("[APP]hit area: [%s]", HitAreaNameBody);
-      }
+      spdlog::debug("[LIVE2D]hit area: [{}]", HitAreaNameBody);
       _models[i]->StartRandomMotion(MotionGroupTapBody, PriorityNormal,
                                     FinishedMotion);
     }
@@ -175,7 +170,7 @@ void LAppLive2DManager::OnUpdate() const {
     LAppModel *model = GetModel(i);
 
     if (model->GetModel() == NULL) {
-      LAppPal::PrintLogLn("Failed to model->GetModel().");
+      spdlog::error("Failed to model->GetModel().");
       continue;
     }
 
@@ -210,15 +205,13 @@ void LAppLive2DManager::NextScene() {
 
 void LAppLive2DManager::ChangeScene(Csm::csmInt32 index) {
   _sceneIndex = index;
-  if (DebugLogEnable) {
-    LAppPal::PrintLogLn("[APP]model index: %d", _sceneIndex);
-  }
+  spdlog::debug("[LIVE2D]model index: {}", _sceneIndex);
 
   // ModelDir[]に保持したディレクトリ名から
   // model3.jsonのパスを決定する.
   // ディレクトリ名とmodel3.jsonの名前を一致させておくこと.
   const csmString &model = _modelDir[index];
-  LAppPal::PrintLogLn("[APP]_modelDir: %s", model.GetRawString());
+  spdlog::info("[LIVE2D]_modelDir: {}", model.GetRawString());
 
   csmString modelPath(
       LAppDelegate::GetInstance()->GetExecuteAbsolutePath().c_str());

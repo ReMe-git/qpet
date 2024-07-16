@@ -24,6 +24,7 @@
 #include "LAppView.hpp"
 #include "LAppWavFileHandler.hpp"
 #include "OpenGLExtraFunctions.hpp"
+#include "spdlog/spdlog.h"
 
 using namespace Csm;
 using namespace std;
@@ -50,9 +51,7 @@ void LAppDelegate::ReleaseInstance() {
 }
 
 bool LAppDelegate::Initialize(Live2dWidget *window) {
-  if (DebugLogEnable) {
-    LAppPal::PrintLogLn("START");
-  }
+	spdlog::debug("[Live2D]START");
 
   _window = window;
 

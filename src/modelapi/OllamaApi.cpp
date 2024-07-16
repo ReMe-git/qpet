@@ -9,7 +9,7 @@
 #include <string>
 
 #include "../live2dwidget/LAppDefine.hpp"
-#include "../live2dwidget/LAppPal.hpp"
+#include "spdlog/spdlog.h"
 
 using namespace LAppDefine;
 
@@ -41,14 +41,10 @@ bool OllamaApi::GetRespone(std::string &respone) {
 void OllamaApi::SendRequest(std::string request) {
   requestLock.lock();
   requestQueue.push(request);
-  if (DebugLogEnable) {
-    LAppPal::PrintLogLn("[Ollama]send request");
-  }
+	spdlog::debug("[Ollama]send request");
   if (requestQueue.size() > 0) {
     hasRequest.notify_all();
-    if (DebugLogEnable) {
-      LAppPal::PrintLogLn("[Ollama]notify worker");
-    }
+      spdlog::debug("[Ollama]notify worker");
   }
   requestLock.unlock();
 }  // PullRequest
@@ -65,14 +61,14 @@ size_t OllamaApi::OllamaWriteCallback(void *contents, size_t size, size_t nmemb,
   if (!reader->parse(static_cast<char *>(contents),
                      static_cast<char *>(contents) + totalSize, &respone,
                      &errors)) {
-    LAppPal::PrintLogLn("[Ollama]fail parse json");
+    spdlog::debug("[Ollama]fail parse json");
   }
   delete reader;
 	std::string appendContent;
   if (respone["message"]["content"] && respone["message"]["content"].isString()) {
 		appendContent = respone["message"]["content"].asString();
 	} else {
-		LAppPal::PrintLogLn("[Ollama]inviaid value");
+		spdlog::debug("[Ollama]inviaid value");
 	}
   readBuffer->append(appendContent.c_str(), appendContent.length());
   responeLock.lock();
@@ -123,13 +119,11 @@ void OllamaApi::CallApi(const std::string question) {
 
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
-      LAppPal::PrintLogLn("[Ollama]fail call ollama api, error: %d", res);
+      spdlog::error("[Ollama]fail call ollama api, error: {}", static_cast<int>(res));
     }
     curl_easy_cleanup(curl);
     curl_slist_free_all(headers);
-    if (DebugLogEnable) {
-      LAppPal::PrintLogLn("[Ollama]call ollama api,return %d", res);
-    }
+  	spdlog::debug("[Ollama]call ollama api,return {}", static_cast<int>(res));
   }
 
   curl_global_cleanup();
@@ -148,17 +142,13 @@ void OllamaApi::Run(void) {
   while (true) {
     std::unique_lock<std::mutex> rlk(requestLock);
     while (requestQueue.empty()) {
-      if (DebugLogEnable) {
-        LAppPal::PrintLogLn("[Ollama]wait request");
-      }
+      spdlog::debug("[Ollama]wait request");
       hasRequest.wait(rlk);
     }
     requestContent = requestQueue.front();
     requestQueue.pop();
     requestLock.unlock();
-    if (DebugLogEnable) {
-      LAppPal::PrintLogLn("[Ollama]get request");
-    }
+    spdlog::debug("[Ollama]get request");
     CallApi(requestContent);
   }
 }  // Run

@@ -7,12 +7,14 @@
 #include <QMenu>
 #include <QAction>
 
+#include "spdlog/spdlog.h"
 #include "modelapi/OllamaApi.hpp"
 #include "pipertts/tts.hpp"
 
 int Application::SetupApp(int argc, char **argv) {
   application = new QApplication(argc, argv);
-  OllamaApi::InitApi("http://10.0.209.254:11434/api/chat", "qwen2:7b");
+	spdlog::set_level(spdlog::level::debug);
+  OllamaApi::InitApi("http://10.0.209.254:11434/api/chat", "llama3:8b");
   //PiperTTSApi::InitApi("http://localhost:8080/tts", "voice-zh-cn-huayan-x-low",
   //                     "voice-en-us-amy-low");
 	std::string modelPath = QCoreApplication::applicationDirPath().toStdString() +

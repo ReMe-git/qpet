@@ -23,6 +23,7 @@
 #include "LAppTextureManager.hpp"
 #include "OpenGLExtraFunctions.hpp"
 #include "TouchManager.hpp"
+#include "spdlog/spdlog.h"
 
 using namespace std;
 using namespace LAppDefine;
@@ -206,9 +207,7 @@ void LAppView::OnTouchesEnded(float px, float py) const {
         _touchManager->GetX());  // 論理座標変換した座標を取得。
     float y = _deviceToScreen->TransformY(
         _touchManager->GetY());  // 論理座標変換した座標を取得。
-    if (DebugTouchLogEnable) {
-      LAppPal::PrintLogLn("[APP]touchesEnded x:%.2f y:%.2f", x, y);
-    }
+      spdlog::debug("[LIVE2D]touchesEnded x:{} y:{}", x, y);
     live2DManager->OnTap(x, y);
     /*
             // 歯車にタップしたか

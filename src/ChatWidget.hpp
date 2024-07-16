@@ -11,12 +11,9 @@
 #include <QGridLayout>
 #include <string>
 
-#include "live2dwidget/LAppDefine.hpp"
-#include "live2dwidget/LAppPal.hpp"
+#include "spdlog/spdlog.h"
 #include "modelapi/OllamaApi.hpp"
 #include "pipertts/tts.hpp"
-
-using namespace LAppDefine;
 
 class ChatWidget : public QWidget {
  public:
@@ -78,9 +75,7 @@ class ChatWidget : public QWidget {
       chatText->setMarkdown(QString::fromStdString(chatContent));
       chatText->moveCursor(QTextCursor::End);
 			PiperTTS::SendRequest(data);
-			if (DebugLogEnable) {
-				LAppPal::PrintLogLn("[Qt]update chat content");
-		}
+			spdlog::debug("[Qt]update chat content");
     }
   }
 
@@ -90,9 +85,7 @@ class ChatWidget : public QWidget {
     chatEdit->clear();
     if (data.length() > 0) {
       OllamaApi::SendRequest(data);
-      if (DebugLogEnable) {
-        LAppPal::PrintLogLn("[Qt]send request");
-      }
+      spdlog::debug("[Qt]send request");
     }
   }
 };

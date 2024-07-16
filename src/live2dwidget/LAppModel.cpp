@@ -22,6 +22,7 @@
 #include "LAppDelegate.hpp"
 #include "LAppPal.hpp"
 #include "LAppTextureManager.hpp"
+#include "spdlog/spdlog.h"
 
 using namespace Live2D::Cubism::Framework;
 using namespace Live2D::Cubism::Framework::DefaultParameterId;
@@ -29,16 +30,12 @@ using namespace LAppDefine;
 
 namespace {
 csmByte *CreateBuffer(const csmChar *path, csmSizeInt *size) {
-  if (DebugLogEnable) {
-    LAppPal::PrintLogLn("[APP]create buffer: %s ", path);
-  }
+  spdlog::debug("[LIVE2D]create buffer: {} ", path);
   return LAppPal::LoadFileAsBytes(path, size);
 }
 
 void DeleteBuffer(csmByte *buffer, const csmChar *path = "") {
-  if (DebugLogEnable) {
-    LAppPal::PrintLogLn("[APP]delete buffer: %s", path);
-  }
+	spdlog::debug("[LIVE2D]delete buffer: {}", path);
   LAppPal::ReleaseBytes(buffer);
 }
 }  // namespace
@@ -73,9 +70,7 @@ LAppModel::~LAppModel() {
 void LAppModel::LoadAssets(const csmChar *dir, const csmChar *fileName) {
   _modelHomeDir = dir;
 
-  if (_debugMode) {
-    LAppPal::PrintLogLn("[APP]load model setting: %s", fileName);
-  }
+  spdlog::debug("[LIVE2D]load model setting: {}", fileName);
 
   csmSizeInt size;
   const csmString path = csmString(dir) + fileName;
@@ -87,7 +82,7 @@ void LAppModel::LoadAssets(const csmChar *dir, const csmChar *fileName) {
   SetupModel(setting);
 
   if (_model == NULL) {
-    LAppPal::PrintLogLn("Failed to LoadAssets().");
+    spdlog::error("Failed to LoadAssets().");
     return;
   }
 
@@ -110,9 +105,7 @@ void LAppModel::SetupModel(ICubismModelSetting *setting) {
     csmString path = _modelSetting->GetModelFileName();
     path = _modelHomeDir + path;
 
-    if (_debugMode) {
-      LAppPal::PrintLogLn("[APP]create model: %s", setting->GetModelFileName());
-    }
+    spdlog::debug("[LIVE2D]create model: {}", setting->GetModelFileName());
 
     buffer = CreateBuffer(path.GetRawString(), &size);
     LoadModel(buffer, size);
@@ -214,7 +207,7 @@ void LAppModel::SetupModel(ICubismModelSetting *setting) {
   }
 
   if (_modelSetting == NULL || _modelMatrix == NULL) {
-    LAppPal::PrintLogLn("Failed to SetupModel().");
+    spdlog::error("Failed to SetupModel().");
     return;
   }
 
@@ -245,10 +238,8 @@ void LAppModel::PreloadMotionGroup(const csmChar *group) {
     csmString path = _modelSetting->GetMotionFileName(group, i);
     path = _modelHomeDir + path;
 
-    if (_debugMode) {
-      LAppPal::PrintLogLn("[APP]load motion: %s => [%s_%d] ",
+    spdlog::debug("[LIVE2D]load motion: {} => [{}_{}] ",
                           path.GetRawString(), group, i);
-    }
 
     csmByte *buffer;
     csmSizeInt size;
@@ -411,9 +402,7 @@ CubismMotionQueueEntryHandle LAppModel::StartMotion(
   if (priority == PriorityForce) {
     _motionManager->SetReservePriority(priority);
   } else if (!_motionManager->ReserveMotion(priority)) {
-    if (_debugMode) {
-      LAppPal::PrintLogLn("[APP]can't start motion.");
-    }
+    spdlog::debug("[LIVE2D]can't start motion.");
     return InvalidMotionQueueEntryHandleValue;
   }
 
@@ -465,9 +454,7 @@ CubismMotionQueueEntryHandle LAppModel::StartMotion(
   }
   *///使用TTS生产的wav文件代替
 
-  if (_debugMode) {
-    LAppPal::PrintLogLn("[APP]start motion: [%s_%d]", group, no);
-  }
+  spdlog::debug("[LIVE2D]start motion: [{}_{}]", group, no);
   return _motionManager->StartMotionPriority(motion, autoDelete, priority);
 }
 
@@ -521,15 +508,12 @@ csmBool LAppModel::HitTest(const csmChar *hitAreaName, csmFloat32 x,
 
 void LAppModel::SetExpression(const csmChar *expressionID) {
   ACubismMotion *motion = _expressions[expressionID];
-  if (_debugMode) {
-    LAppPal::PrintLogLn("[APP]expression: [%s]", expressionID);
-  }
+  spdlog::debug("[LIVE2D]expression: [{}]", expressionID);
 
   if (motion != NULL) {
     _expressionManager->StartMotionPriority(motion, false, PriorityForce);
   } else {
-    if (_debugMode)
-      LAppPal::PrintLogLn("[APP]expression[%s] is null ", expressionID);
+      spdlog::debug("[LIVE2D]expression[{}] is null ", expressionID);
   }
 }
 

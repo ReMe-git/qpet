@@ -8,7 +8,7 @@
 #include <queue>
 
 #include "../live2dwidget/LAppDefine.hpp"
-#include "../live2dwidget/LAppPal.hpp"
+#include "spdlog/spdlog.h"
 #include "TextParser.hpp"
 
 using namespace LAppDefine;
@@ -40,14 +40,10 @@ bool PiperTTSApi::GetRespone(std::vector<char> &respone) {
 void PiperTTSApi::SendRequest(std::string request) {
   requestLock.lock();
   requestQueue.push(request);
-  if (DebugLogEnable) {
-    LAppPal::PrintLogLn("[PiperTTS]send request");
-  }
+  spdlog::debug("[PiperTTS]send request");
   if (requestQueue.size() > 0) {
     hasRequest.notify_all();
-    if (DebugLogEnable) {
-      LAppPal::PrintLogLn("[PiperTTS]notify worker");
-    }
+    spdlog::debug("[PiperTTS]notify worker");
   }
   requestLock.unlock();
 }  // PullRequest
@@ -87,13 +83,11 @@ void PiperTTSApi::CallApi(std::string input, int type) {
 
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
-      LAppPal::PrintLogLn("[PpierTTS]fail call api, error: %d", res);
+      spdlog::error("[PpierTTS]fail call api, error: {}", static_cast<int>(res));
     }
     curl_easy_cleanup(curl);
     curl_slist_free_all(headers);
-    if (DebugLogEnable) {
-      LAppPal::PrintLogLn("[PiperTTS]call pipertts api, return %d", res);
-    }
+    spdlog::debug("[PiperTTS]call pipertts api, return {}", static_cast<int>(res));
   }
   curl_global_cleanup();
 
@@ -119,18 +113,14 @@ void PiperTTSApi::Run(void) {
     std::unique_lock<std::mutex> rlk(requestLock);
 		
 		if (requestQueue.empty() && parser.isEmpty()) {
-      if (DebugLogEnable) {
-        LAppPal::PrintLogLn("[PiperTTS]api wait request");
-      }
+      spdlog::debug("[PiperTTS]api wait request");
       hasRequest.wait(rlk);
 		} else if (!requestQueue.empty()) {
 			requestContent = requestQueue.front();
 			requestQueue.pop();
 			parser.AppendText(requestContent);
 			parser.SplitText();
-			if (DebugLogEnable) {
-				LAppPal::PrintLogLn("[PiperTTS]api get request");
-			}
+			spdlog::debug("[PiperTTS]api get request");
 			requestLock.unlock();
 		}
 
@@ -139,9 +129,7 @@ void PiperTTSApi::Run(void) {
 			std::string content; 
 			text.GetContent(content);
       CallApi(content, text.GetLanguageType());
-      if (DebugLogEnable) {
-        LAppPal::PrintLogLn("[PiperTTS]deal content %s", content.c_str());
-      }
+      spdlog::debug("[PiperTTS]deal content {}", content.c_str());
     }
   }
 }  // Run
