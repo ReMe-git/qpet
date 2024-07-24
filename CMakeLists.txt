@@ -99,12 +99,24 @@ ExternalProject_Add(
 	CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${PIPER_PHONEMIZE_DIR}
 )
 
+# whisper.cpp
+set(WHISPER_CPP_DIR "${CMAKE_CURRENT_BINARY_DIR}/whisper.cpp")
+set(WHISPER_CPP_VERSION "v1.6.2")
+
+ExternalProject_Add(
+	whisper_cpp_external
+	PREFIX "${CMAKE_CURRENT_BINARY_DIR}/whisper.cpp"
+	URL "https://github.com/ggerganov/whisper.cpp/archive/refs/tags/${WHISPER_CPP_VERSION}.zip"
+	CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${WHISPER_CPP_DIR}
+)
+
 # Make executable app.
 add_executable(${APP_NAME})
 
 add_dependencies(${APP_NAME} fmt_external)
 add_dependencies(${APP_NAME} spdlog_external)
 add_dependencies(${APP_NAME} piper_phonemize_external)
+add_dependencies(${APP_NAME} whisper_cpp_external)
 
 # Add source files.
 add_subdirectory(src)
@@ -113,7 +125,7 @@ add_subdirectory(src)
 target_link_libraries(${APP_NAME}
   Framework
   jsoncpp
-  CURL::libcurl
+  curl
 	Qt6::Core
 	Qt6::Gui
 	Qt6::Widgets
@@ -125,12 +137,14 @@ target_link_libraries(${APP_NAME}
   espeak-ng
   piper_phonemize
   onnxruntime
+	whisper
 )
 
 target_link_directories(${APP_NAME} PRIVATE
   ${FMT_DIR}/lib
 	${SPDLOG_DIR}/lib
 	${PIPER_PHONEMIZE_DIR}/lib
+	${WHISPER_CPP_DIR}/lib
 )
 
 # Specify include directories.
@@ -139,6 +153,7 @@ target_include_directories(${APP_NAME} PRIVATE
   ${FMT_DIR}/include
   ${SPDLOG_DIR}/include
   ${PIPER_PHONEMIZE_DIR}/include
+	${WHISPER_CPP_DIR}/include
 )
 
 # Copy resource directory to build directory.
