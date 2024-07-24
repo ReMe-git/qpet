@@ -14,14 +14,16 @@
 int Application::SetupApp(int argc, char **argv) {
   application = new QApplication(argc, argv);
 	spdlog::set_level(spdlog::level::debug);
-  OllamaApi::InitApi("http://10.0.209.254:11434/api/chat", "llama3:8b");
+  OllamaApi::InitApi("http://10.0.209.254:11434/api/chat", "qwen2:1.5b");
   //PiperTTSApi::InitApi("http://localhost:8080/tts", "voice-zh-cn-huayan-x-low",
   //                     "voice-en-us-amy-low");
-	std::string modelPath = QCoreApplication::applicationDirPath().toStdString() +
+	std::string enModelPath = QCoreApplication::applicationDirPath().toStdString() +
 		"/res/piper/models/en_US-amy-medium.onnx";
+	std::string zhModelPath = QCoreApplication::applicationDirPath().toStdString() +
+		"/res/piper/models/zh_CN-huayan-medium.onnx";
 	std::string eSpeakDataPath = QCoreApplication::applicationDirPath().toStdString() +
 		"/res/piper/espeak-ng-data";
-	PiperTTS::Initialize(modelPath, 0, eSpeakDataPath, false);
+	PiperTTS::Initialize(zhModelPath, 0, enModelPath, 0, eSpeakDataPath, false);
   mainWindow = new QMainWindow();
   QFile styleFile(QCoreApplication::applicationDirPath() +
                   "/res/ui/style.qss");
@@ -49,15 +51,20 @@ int Application::SetupApp(int argc, char **argv) {
   systemTray->setIcon(
       QIcon(QCoreApplication::applicationDirPath() + "/res/ui/icon.png"));
   trayMenu = new QMenu();
-  chatAction = new QAction("󰭻 Chat", trayMenu);
-  exitAction = new QAction("󰅙 Exit", trayMenu);
+  chatAction = new QAction("󰭻  Chat", trayMenu);
+  showAction = new QAction("󰈈  Show", trayMenu);
+  exitAction = new QAction("󰅙  Exit", trayMenu);
   trayMenu->addAction(chatAction);
-  trayMenu->addAction(exitAction);
-
+  trayMenu->addAction(showAction);
+	trayMenu->addAction(exitAction);
   mainWindow->connect(chatAction, &QAction::triggered, [this]() {
     if (!chatWidget->isVisible()) { chatWidget->setVisible(true); }
     else { chatWidget->setVisible(false); }
   });
+	mainWindow->connect(showAction, &QAction::triggered, [this]() {
+			if (!mainWindow->isVisible()) { mainWindow->setVisible(true); }
+			else { mainWindow->setVisible(false); }
+	});
   mainWindow->connect(exitAction, &QAction::triggered, [this]() {
     ollama.terminate();
     ollama.wait();

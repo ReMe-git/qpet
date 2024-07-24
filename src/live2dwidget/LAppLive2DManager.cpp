@@ -146,14 +146,14 @@ void LAppLive2DManager::OnDrag(csmFloat32 x, csmFloat32 y) const {
 }
 
 void LAppLive2DManager::OnTap(csmFloat32 x, csmFloat32 y) {
-	spdlog::debug("[LIVE2D]tap point: (x:{} y:{})", x, y);
+	spdlog::debug("[Live2D] tap point: (x:{} y:{})", x, y);
 
   for (csmUint32 i = 0; i < _models.GetSize(); i++) {
     if (_models[i]->HitTest(HitAreaNameHead, x, y)) {
-      spdlog::debug("[LIVE2D]hit area: [{}]", HitAreaNameHead);
+      spdlog::debug("[Live2D] hit area: [{}]", HitAreaNameHead);
       _models[i]->SetRandomExpression();
     } else if (_models[i]->HitTest(HitAreaNameBody, x, y)) {
-      spdlog::debug("[LIVE2D]hit area: [{}]", HitAreaNameBody);
+      spdlog::debug("[Live2D] hit area: [{}]", HitAreaNameBody);
       _models[i]->StartRandomMotion(MotionGroupTapBody, PriorityNormal,
                                     FinishedMotion);
     }
@@ -205,13 +205,13 @@ void LAppLive2DManager::NextScene() {
 
 void LAppLive2DManager::ChangeScene(Csm::csmInt32 index) {
   _sceneIndex = index;
-  spdlog::debug("[LIVE2D]model index: {}", _sceneIndex);
+  spdlog::debug("[Live2D] model index: {}", _sceneIndex);
 
   // ModelDir[]に保持したディレクトリ名から
   // model3.jsonのパスを決定する.
   // ディレクトリ名とmodel3.jsonの名前を一致させておくこと.
   const csmString &model = _modelDir[index];
-  spdlog::info("[LIVE2D]_modelDir: {}", model.GetRawString());
+  spdlog::info("[Live2D] _modelDir: {}", model.GetRawString());
 
   csmString modelPath(
       LAppDelegate::GetInstance()->GetExecuteAbsolutePath().c_str());

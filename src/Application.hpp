@@ -37,6 +37,7 @@ class Application {
   QSystemTrayIcon *systemTray;
   QMenu *trayMenu;
   QAction *chatAction;
+  QAction *showAction;
   QAction *exitAction;
   PiperTTSWorker pipertts;
   OllamaWorker ollama;

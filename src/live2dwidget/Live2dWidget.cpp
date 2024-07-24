@@ -69,7 +69,7 @@ void Live2dWidget::updateMotions() {
   QMediaPlayer::MediaStatus status = audioPlayer->mediaStatus();
   if (status == QMediaPlayer::NoMedia || status == QMediaPlayer::EndOfMedia) {
     if (PiperTTS::GetRespone(wavData)) {
-			spdlog::debug("[LIVE2D]get wavdata, size is {}", wavData.size());
+			spdlog::debug("[Live2D] get wavdata, size is {}", wavData.size());
       LAppDelegate::GetInstance()->GetWavFileHandler()->Start(wavData);
       QByteArray audioData(wavData.data(), wavData.size());
       QBuffer *audioBuffer = new QBuffer(this);

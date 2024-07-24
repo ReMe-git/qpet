@@ -75,7 +75,7 @@ class ChatWidget : public QWidget {
       chatText->setMarkdown(QString::fromStdString(chatContent));
       chatText->moveCursor(QTextCursor::End);
 			PiperTTS::SendRequest(data);
-			spdlog::debug("[Qt]update chat content");
+			spdlog::debug("[Chat] update chat content");
     }
   }
 
@@ -85,7 +85,7 @@ class ChatWidget : public QWidget {
     chatEdit->clear();
     if (data.length() > 0) {
       OllamaApi::SendRequest(data);
-      spdlog::debug("[Qt]send request");
+      spdlog::debug("[Chat] send request");
     }
   }
 };

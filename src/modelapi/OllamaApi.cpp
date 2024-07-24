@@ -61,14 +61,16 @@ size_t OllamaApi::OllamaWriteCallback(void *contents, size_t size, size_t nmemb,
   if (!reader->parse(static_cast<char *>(contents),
                      static_cast<char *>(contents) + totalSize, &respone,
                      &errors)) {
-    spdlog::debug("[Ollama]fail parse json");
+    spdlog::debug("[Ollama] fail parse json");
+		return totalSize;
   }
   delete reader;
 	std::string appendContent;
   if (respone["message"]["content"] && respone["message"]["content"].isString()) {
 		appendContent = respone["message"]["content"].asString();
 	} else {
-		spdlog::debug("[Ollama]inviaid value");
+		spdlog::debug("[Ollama] inviaid value");
+		return totalSize;
 	}
   readBuffer->append(appendContent.c_str(), appendContent.length());
   responeLock.lock();
@@ -119,11 +121,11 @@ void OllamaApi::CallApi(const std::string question) {
 
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
-      spdlog::error("[Ollama]fail call ollama api, error: {}", static_cast<int>(res));
+      spdlog::error("[Ollama] fail call ollama api, error: {}", static_cast<int>(res));
     }
     curl_easy_cleanup(curl);
     curl_slist_free_all(headers);
-  	spdlog::debug("[Ollama]call ollama api,return {}", static_cast<int>(res));
+  	spdlog::debug("[Ollama] call ollama api,return {}", static_cast<int>(res));
   }
 
   curl_global_cleanup();
@@ -142,13 +144,13 @@ void OllamaApi::Run(void) {
   while (true) {
     std::unique_lock<std::mutex> rlk(requestLock);
     while (requestQueue.empty()) {
-      spdlog::debug("[Ollama]wait request");
+      spdlog::debug("[Ollama] wait request");
       hasRequest.wait(rlk);
     }
     requestContent = requestQueue.front();
     requestQueue.pop();
     requestLock.unlock();
-    spdlog::debug("[Ollama]get request");
+    spdlog::debug("[Ollama] get request");
     CallApi(requestContent);
   }
 }  // Run

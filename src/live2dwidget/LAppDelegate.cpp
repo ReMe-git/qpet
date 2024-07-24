@@ -51,7 +51,7 @@ void LAppDelegate::ReleaseInstance() {
 }
 
 bool LAppDelegate::Initialize(Live2dWidget *window) {
-	spdlog::debug("[Live2D]START");
+	spdlog::debug("[Live2D] START");
 
   _window = window;
 

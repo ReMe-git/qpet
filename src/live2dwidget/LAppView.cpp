@@ -207,7 +207,7 @@ void LAppView::OnTouchesEnded(float px, float py) const {
         _touchManager->GetX());  // 論理座標変換した座標を取得。
     float y = _deviceToScreen->TransformY(
         _touchManager->GetY());  // 論理座標変換した座標を取得。
-      spdlog::debug("[LIVE2D]touchesEnded x:{} y:{}", x, y);
+      spdlog::debug("[Live2D] touchesEnded x:{} y:{}", x, y);
     live2DManager->OnTap(x, y);
     /*
             // 歯車にタップしたか
